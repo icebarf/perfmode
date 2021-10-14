@@ -8,7 +8,7 @@ Performance modes available on these series of laptop in the Asus Armoury Crate 
 - Balanced
 - Silent
 
-Perfmode aims at bringing the same ease of use from windows to linux in mainting the performance of your asus laptop.
+Perfmode aims at bringing the same ease of use from windows to linux in maintaining the performance of your asus laptop.
 
 ## Usage
 
