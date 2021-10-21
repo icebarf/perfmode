@@ -72,7 +72,7 @@ static void check_policies()
     }
 
     if (a_pol_exists == -1 && f_pol_exists == -1 && f_pol_exists_2 == -1) {
-        puts("Perfmode: module files not found");
+        puts("Perfmode: Not enugh permissions");
         exit(1);
     }
 }
@@ -175,9 +175,10 @@ int main(int argc, const char* argv[])
         return 0;
     }
 
-    /* Check if asus_nb_wmi module is loaded */
+    /* Check if modules are loaded */
     uint8_t retval = check_module_loaded();
     if (retval) {
+        puts("Perfmode: asus_nb_wmi or faustus module not loaded!");
         return 0;
     }
 
