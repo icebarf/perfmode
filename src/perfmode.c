@@ -5,32 +5,74 @@
 #include <string.h>
 #include <unistd.h>
 
+/* modes */
 #define __TURBO_MODE '1'
 #define __BALANCED_MODE '0'
 #define __SILENT_MODE '2'
 
-static const char* _POLICY_FILE =
+/* files */
+#define __ASUS_POL 0
+#define __FAUS_POL 1
+#define __FAUS_POL_2 2
+
+/* Different policy files available under different kernel modules */
+static const char* _APOLICY_FILE =
     "/sys/devices/platform/asus-nb-wmi/throttle_thermal_policy";
+static const char* _FPOLICY_FILE =
+    "/sys/devices/platform/faustus/fan_boost_mode";
+static const char* _FPOLICY_FILE_2 =
+    "/sys/devices/platform/faustus/throttle_thermal_policy";
 
-__attribute__((warn_unused_result)) static uint8_t check_module_loaded()
+/* Global variables for different policy file being available */
+uint8_t _APOL, _FPOL, _FPOL2;
+
+/* Check for modules */
+static uint8_t check_module_loaded()
 {
-    /* if output, module is loaded, proceed successfully otherwise exit*/
-    FILE* module_fp = popen("lsmod | grep asus_nb_wmi", "r");
+    uint8_t retval = -1;
 
+    /* check for asus_nb_wmi */
+    FILE* a_module_fp = popen("lsmod | grep asus_nb_wmi", "r");
     char outbuf[25];
-    if (fread(outbuf, 1, sizeof(outbuf), module_fp) > 0) {
-        return 0;
-    } else {
-        puts("Perfmode_E : asus_nb_wmi module not loaded!");
-        return 1;
+    if (fread(outbuf, 1, sizeof(outbuf), a_module_fp) > 0) {
+        retval = 0;
     }
+
+    /* check for faustus */
+    FILE* f_module_fp = popen("lsmod | grep faustus", "r");
+    char f_outbuf[25];
+    if (fread(f_outbuf, 1, sizeof(f_outbuf), f_module_fp) > 0) {
+        retval = 0;
+    }
+
+    return retval;
 }
 
-static void check_permissions()
+static void check_policies()
 {
-    int perm_val = access(_POLICY_FILE, W_OK);
-    if (perm_val == -1) {
-        perror("Perfmode_E ");
+    int a_pol_exists = -1;
+    int f_pol_exists = -1;
+    int f_pol_exists_2 = -1;
+
+    /* asus_nb_wmi */
+    /* Check if policy file exists */
+    a_pol_exists = access(_APOLICY_FILE, F_OK);
+    f_pol_exists = access(_FPOLICY_FILE, F_OK);
+    f_pol_exists_2 = access(_FPOLICY_FILE_2, F_OK);
+
+    /* Return value of access is zero
+     * if there is no error otherwise -1 */
+
+    if (a_pol_exists == 0) {
+        _APOL = 1;
+    } else if (f_pol_exists == 0) {
+        _FPOL = 1;
+    } else if (f_pol_exists_2 == 0) {
+        _FPOL2 = 1;
+    }
+
+    if (a_pol_exists == -1 && f_pol_exists == -1 && f_pol_exists_2 == -1) {
+        puts("Perfmode: module files not found");
         exit(1);
     }
 }
@@ -57,27 +99,10 @@ static void print_help()
          "\t -s\n\n"
 
          "\t--help          Display this help menu\n"
-         "\t -h\n\n");
+         "\t -h");
 }
 
-static void write_to_policy(int mode)
-{
-    FILE* fp = fopen(_POLICY_FILE, "w");
-    if (fp == NULL) {
-        puts("Perfmode_E : Could not open Policy file");
-        exit(1);
-    }
-
-    int ch;
-    if ((ch = fputc(mode, fp)) != mode) {
-        puts("Perfmode_E : Could not write to Policy file");
-    } else {
-        puts("Perfmode : Mode set successfully");
-    }
-}
-
-__attribute__((warn_unused_result)) static uint8_t
-parse_flags(const char* argv[])
+static uint8_t parse_flags(const char* argv[])
 {
     /* Check for help */
     if ((strncmp(argv[1], "--help", strlen(argv[1])) == 0) ||
@@ -106,6 +131,41 @@ parse_flags(const char* argv[])
     return -1;
 }
 
+static void write_to_policy(uint8_t pol_file, uint8_t mode)
+{
+    FILE* fp;
+
+    switch (pol_file) {
+    case 0: {
+        fp = fopen(_APOLICY_FILE, "w");
+        break;
+    }
+    case 1: {
+        fp = fopen(_FPOLICY_FILE, "w");
+        break;
+    }
+    case 2: {
+        fp = fopen(_FPOLICY_FILE_2, "w");
+        break;
+    }
+    default: {
+        fp = NULL;
+    }
+    }
+
+    if (fp == NULL) {
+        puts("Perfmode: Could not open Policy file");
+        exit(1);
+    }
+
+    int ch;
+    if ((ch = fputc(mode, fp)) != mode) {
+        puts("Perfmode: Could not write to Policy file");
+    } else {
+        puts("Perfmode : Mode set successfully");
+    }
+}
+
 int main(int argc, const char* argv[])
 {
     /* Error checking */
@@ -116,15 +176,27 @@ int main(int argc, const char* argv[])
     }
 
     /* Check if asus_nb_wmi module is loaded */
-    uint8_t rval = check_module_loaded();
-    if (rval) {
+    uint8_t retval = check_module_loaded();
+    if (retval) {
         return 0;
     }
 
-    /* Check if we have enough permissions to write to policy file */
-    check_permissions();
+    /* Check for existence of policy files and if can write to policy file */
+    check_policies();
 
     uint8_t mode = parse_flags(argv);
+    uint8_t pol_file = -1;
+
+    if (_APOL) {
+        pol_file = 0;
+    }
+    if (_FPOL) {
+        pol_file = 1;
+    }
+    if (_FPOL2) {
+        pol_file = 2;
+    }
+
     switch (mode) {
 
     case 0: {
@@ -132,20 +204,19 @@ int main(int argc, const char* argv[])
         break;
     }
     case 1: {
-        write_to_policy(__TURBO_MODE);
+        write_to_policy(pol_file, __TURBO_MODE);
         break;
     }
     case 2: {
-        write_to_policy(__BALANCED_MODE);
+        write_to_policy(pol_file, __BALANCED_MODE);
         break;
     }
     case 3: {
-        write_to_policy(__SILENT_MODE);
+        write_to_policy(pol_file, __SILENT_MODE);
         break;
     }
     default: {
-        puts("Perfmode_E : Invalid arguments passed");
-        break;
+        puts("Perfmode: Invalid arguments passed");
     }
     }
     return 0;
