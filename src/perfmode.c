@@ -29,6 +29,7 @@ uint8_t _APOL, _FPOL, _FPOL2;
 /* Check for modules */
 static uint8_t check_module_loaded()
 {
+    
     uint8_t retval = -1;
 
     /* check for asus_nb_wmi */
