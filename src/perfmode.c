@@ -10,6 +10,11 @@
 #define __BALANCED_MODE '0'
 #define __SILENT_MODE '2'
 
+#define __LED_OFF '0'
+#define __LED_MIN '1'
+#define __LED_MED '2'
+#define __LED_MAX '3'
+
 /* files */
 #define __ASUS_POL 0
 #define __FAUS_POL 1
@@ -23,13 +28,17 @@ static const char* _FPOLICY_FILE =
 static const char* _FPOLICY_FILE_2 =
     "/sys/devices/platform/faustus/throttle_thermal_policy";
 
+/* Keyboard Backlight files - asus-nb-wmi */
+static const char* _ALED_FILE =
+    "/sys/devices/platform/asus-nb-wmi/leds/asus::kbd_backlight/brightness";
+
 /* Global variables for different policy file being available */
-uint8_t _APOL, _FPOL, _FPOL2;
+uint8_t _APOL, _ALED, _FPOL, _FPOL2;
 
 /* Check for modules */
 static uint8_t check_module_loaded()
 {
-    
+
     uint8_t retval = -1;
 
     /* check for asus_nb_wmi */
@@ -54,12 +63,13 @@ static void check_policies()
     int a_pol_exists = -1;
     int f_pol_exists = -1;
     int f_pol_exists_2 = -1;
+    int a_led_exists = -1;
 
-    /* asus_nb_wmi */
     /* Check if policy file exists */
     a_pol_exists = access(_APOLICY_FILE, F_OK);
     f_pol_exists = access(_FPOLICY_FILE, F_OK);
     f_pol_exists_2 = access(_FPOLICY_FILE_2, F_OK);
+    a_led_exists = access(_ALED_FILE, F_OK);
 
     /* Return value of access is zero
      * if there is no error otherwise -1 */
@@ -70,9 +80,12 @@ static void check_policies()
         _FPOL = 1;
     } else if (f_pol_exists_2 == 0) {
         _FPOL2 = 1;
+    } else if (a_led_exists == 0) {
+        _ALED = 1;
     }
 
-    if (a_pol_exists == -1 && f_pol_exists == -1 && f_pol_exists_2 == -1) {
+    if (a_pol_exists == -1 && f_pol_exists == -1 && f_pol_exists_2 == -1 &&
+        a_led_exists) {
         puts("Perfmode: Not enugh permissions");
         exit(1);
     }
@@ -90,6 +103,8 @@ static void print_help()
 
          "Options:\n"
 
+         "\nFan Control Options\n"
+
          "\t--turbo         Turbo Mode\n"
          "\t -t\n\n"
 
@@ -98,6 +113,13 @@ static void print_help()
 
          "\t--silent        Silent Mode\n"
          "\t -s\n\n"
+
+         "Keyboard Backlight Options\n"
+
+         "\t-l off           Turn off Backlight\n"
+         "\t-l min           Minimum Backlight\n"
+         "\t-l med           Medium  Backlight\n"
+         "\t-l max           Maximum Backlight\n\n"
 
          "\t--help          Display this help menu\n"
          "\t -h");
@@ -111,22 +133,45 @@ static uint8_t parse_flags(const char* argv[])
         return 0;
     }
 
-    /* Set turbo mode */
+    /* Check for turbo mode */
     if ((strncmp(argv[1], "--turbo", strlen(argv[1])) == 0) ||
         (strncmp(argv[1], "-t", strlen(argv[1])) == 0)) {
         return 1;
     }
 
-    /* Set balanced bits in flag */
+    /* Check for balanced mode */
     if ((strncmp(argv[1], "--balanced", strlen(argv[1])) == 0) ||
         (strncmp(argv[1], "-b", strlen(argv[1])) == 0)) {
         return 2;
     }
 
-    /* Set silent bits in flag */
+    /* Check silent mode */
     if ((strncmp(argv[1], "--silent", strlen(argv[1])) == 0) ||
         (strncmp(argv[1], "-s", strlen(argv[1])) == 0)) {
         return 3;
+    }
+
+    /* Check for Keyboard Backlight arguments */
+    if (strncmp(argv[1], "-l", strlen(argv[1])) == 0) {
+        /* backlight off */
+        if (strncmp(argv[2], "off", strlen(argv[2])) == 0) {
+            return __LED_OFF;
+        }
+
+        /* backlight min */
+        if (strncmp(argv[2], "min", strlen(argv[2])) == 0) {
+            return __LED_MIN;
+        }
+
+        /* backlight med */
+        if (strncmp(argv[2], "med", strlen(argv[2])) == 0) {
+            return __LED_MED;
+        }
+
+        /* backlight max */
+        if (strncmp(argv[2], "max", strlen(argv[2])) == 0) {
+            return __LED_MAX;
+        }
     }
 
     return -1;
@@ -163,7 +208,22 @@ static void write_to_policy(uint8_t pol_file, uint8_t mode)
     if ((ch = fputc(mode, fp)) != mode) {
         puts("Perfmode: Could not write to Policy file");
     } else {
-        puts("Perfmode : Mode set successfully");
+        puts("Perfmode: Fan Mode set");
+    }
+}
+
+static void handle_led(uint8_t pol_file, uint8_t mode)
+{
+    FILE* fp = fopen(_ALED_FILE, "w");
+    if (fp == NULL) {
+        puts("Perfmode: Could not open Policy file");
+    }
+
+    int ch;
+    if ((ch = fputc(mode, fp)) != mode) {
+        puts("Perfmode: Could not write to Policy file");
+    } else {
+        puts("Perfmode: Keyboard Backlight level set");
     }
 }
 
@@ -171,7 +231,7 @@ int main(int argc, const char* argv[])
 {
     /* Error checking */
     /* show help if too few or too many arguments */
-    if (argc < 2 || argc > 2) {
+    if (argc < 2) {
         print_help();
         return 0;
     }
@@ -189,7 +249,7 @@ int main(int argc, const char* argv[])
     uint8_t mode = parse_flags(argv);
     uint8_t pol_file = -1;
 
-    if (_APOL) {
+    if (_APOL || _ALED) {
         pol_file = 0;
     }
     if (_FPOL) {
@@ -217,6 +277,23 @@ int main(int argc, const char* argv[])
         write_to_policy(pol_file, __SILENT_MODE);
         break;
     }
+    case __LED_OFF: {
+        handle_led(pol_file, __LED_OFF);
+        break;
+    }
+    case __LED_MIN: {
+        handle_led(pol_file, __LED_MIN);
+        break;
+    }
+    case __LED_MED: {
+        handle_led(pol_file, __LED_MED);
+        break;
+    }
+    case __LED_MAX: {
+        handle_led(pol_file, __LED_MAX);
+        break;
+    }
+
     default: {
         puts("Perfmode: Invalid arguments passed");
     }
