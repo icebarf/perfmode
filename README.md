@@ -30,6 +30,45 @@ or
 $ perfmode --help
 ```
 
+## Installation
+
+### Arch
+
+Arch or Arch based distributions can directly install from the AUR. You can either use an AUR Helper or 
+follow the given steps to install manually.
+
+- Package [link](https://aur.archlinux.org/packages/perfmode)
+
+```bash
+git clone https://aur.archlinux.org/perfmode.git
+
+cd perfmode
+
+makepkg -si
+```
+
+
+### Dependencies
+
+- A C Compiler
+- make
+
+### Compiling
+
+Compile using the following commands:
+
+- Using Make
+
+```bash
+$ make
+```
+
+- Directly by a compiler
+
+```bash
+$ gcc -Wall -Wextra src/perfmode.c -o bin/perfmode
+```
+
 ### Troubleshooting
 
 The following is a list of errors reported by faustus and how to fix them.
@@ -67,24 +106,3 @@ Run perfmode with `sudo` to fix this.
 This error reports that perfmode does not have enough permissions to open the policy file.
 
 Run perfmode with `sudo` to fix this.
-
-### Dependencies
-
-- A C Compiler
-- make
-
-### Compiling
-
-Compile using the following commands:
-
-- Using Make
-
-```bash
-$ make
-```
-
-- Directly by a compiler
-
-```bash
-$ gcc -Wall -Wextra src/perfmode.c -o bin/perfmode
-```
