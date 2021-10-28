@@ -1,12 +1,19 @@
 # Perfmode
 
-Perfmode is a performance control utility for ASUS TUF Gaming series of laptops.
+Perfmode is a performance control utility for ASUS TUF Gaming series of laptops. It allows both fan control and backlight control of the laptop.
 
-Performance modes available on these series of laptop in the Asus Armoury Crate Utility are:
+Performance modes available:
 
 - Turbo
 - Balanced
 - Silent
+
+Keyboard backlight options available:
+
+- Off
+- Min
+- Med
+- Max
 
 ## Usage
 
