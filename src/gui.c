@@ -9,7 +9,7 @@ void activate(GtkApplication* app, gpointer user_data)
 
     /* create a new window */
     window = gtk_application_window_new(app);
-    gtk_window_set_title(GTK_WINDOW(window), "Window");
+    gtk_window_set_title(GTK_WINDOW(window), "Perfmode GUI");
 
     /* container for button packing */
     grid = gtk_grid_new();
