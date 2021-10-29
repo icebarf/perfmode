@@ -17,6 +17,8 @@ Keyboard backlight options available:
 
 ## Usage
 
+### Command Line mode
+
 ```bash
 $ sudo perfmode -op | --option
 ```
@@ -30,6 +32,20 @@ or
 $ perfmode --help
 ```
 > Keyboard backlight modes work without sudo. To do Fan Control, sudo is still required
+
+### GUI
+
+![gui.png](assets/gui.png)
+```bash
+$ perfmode
+```
+
+Without any aguments to perfmode, A GUI will be launched. Run with sudo for fan control otherwise
+ only LED Control is available without elevated permissions.
+
+The GUI is still in beta and there exists an issue. Please check the issues section for more information if you're interested.
+
+
 ## Installation
 
 ### Arch
