@@ -29,7 +29,7 @@ or
 
 $ perfmode --help
 ```
-
+> Keyboard backlight modes work without sudo. To do Fan Control, sudo is still required
 ## Installation
 
 ### Arch
