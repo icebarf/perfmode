@@ -1,18 +1,13 @@
 CC = gcc
 WFLAGS = -Wall -Wextra -g -pedantic
-FLAGS_PKG = -Wall -Wextra
+FLAGS_PKG = -Wall -Wextra -g -pedantic
 
 DESTDIR= /usr/bin
 
-.DEFAULT_GOAL := all
-
-all: src/perfmode.c
-	mkdir -p bin
-	$(CC) $(FLAGS) src/perfmode.c -o bin/perfmode
-	chmod +x bin/perfmode
+.DEFAULT_GOAL := gui
 
 pkg: src/perfmode.c
-	$(CC) $(FLAGS_PKG) src/perfmode.c -o perfmode
+	$(CC) $(FLAGS_PKG) src/*.c -o perfmode `pkg-config --cflags --libs gtk4`
 	chmod +x perfmode
 
 install: perfmode
@@ -20,4 +15,5 @@ install: perfmode
 
 gui: src/perfmode.c src/gui.c
 	mkdir -p bin
-	$(CC) $(WFLAGS) src/*.c -o bin/perfmode_gui `pkg-config --cflags --libs gtk4`
+	$(CC) $(WFLAGS) src/*.c -o bin/perfmode `pkg-config --cflags --libs gtk4`
+	chmod +x bin/perfmode
