@@ -5,6 +5,10 @@
 #include <string.h>
 #include <unistd.h>
 
+/* Local files */
+#include "gui.h"
+#include "perfmode.h"
+
 /* modes */
 #define __TURBO_MODE '1'
 #define __BALANCED_MODE '0'
@@ -125,7 +129,7 @@ static void print_help()
          "\t -h");
 }
 
-static uint8_t parse_flags(const char* argv[])
+static uint8_t parse_flags(char* argv[])
 {
     /* Check for help */
     if ((strncmp(argv[1], "--help", strlen(argv[1])) == 0) ||
@@ -227,13 +231,26 @@ static void handle_led(uint8_t pol_file, uint8_t mode)
     }
 }
 
-int main(int argc, const char* argv[])
+int main(int argc, char* argv[])
 {
     /* Error checking */
     /* show help if too few or too many arguments */
     if (argc < 2) {
-        print_help();
-        return 0;
+        /* necessary check for policy files */
+        check_policies();
+
+        /* gtk apps */
+        GtkApplication* app;
+        int status;
+
+        app = gtk_application_new("org.freedesktop.perfmode",
+                                  G_APPLICATION_FLAGS_NONE);
+
+        g_signal_connect(app, "activate", G_CALLBACK(activate), NULL);
+        status = g_application_run(G_APPLICATION(app), argc, argv);
+        g_object_unref(app);
+
+        return status;
     }
 
     /* Check if modules are loaded */
@@ -299,4 +316,128 @@ int main(int argc, const char* argv[])
     }
     }
     return 0;
+}
+
+/* Functions for interfacing with the gui */
+
+/* Keyboard Backlighting */
+
+void led_off(void)
+{
+    uint8_t pol_file = -1;
+
+    if (_APOL || _ALED) {
+        pol_file = 0;
+    }
+    if (_FPOL) {
+        pol_file = 1;
+    }
+    if (_FPOL2) {
+        pol_file = 2;
+    }
+
+    handle_led(pol_file, __LED_OFF);
+}
+
+void led_min(void)
+{
+    uint8_t pol_file = -1;
+
+    if (_APOL || _ALED) {
+        pol_file = 0;
+    }
+    if (_FPOL) {
+        pol_file = 1;
+    }
+    if (_FPOL2) {
+        pol_file = 2;
+    }
+
+    handle_led(pol_file, __LED_MIN);
+}
+
+void led_med(void)
+{
+    uint8_t pol_file = -1;
+
+    if (_APOL || _ALED) {
+        pol_file = 0;
+    }
+    if (_FPOL) {
+        pol_file = 1;
+    }
+    if (_FPOL2) {
+        pol_file = 2;
+    }
+
+    handle_led(pol_file, __LED_MED);
+}
+
+void led_max(void)
+{
+    uint8_t pol_file = -1;
+
+    if (_APOL || _ALED) {
+        pol_file = 0;
+    }
+    if (_FPOL) {
+        pol_file = 1;
+    }
+    if (_FPOL2) {
+        pol_file = 2;
+    }
+
+    handle_led(pol_file, __LED_MAX);
+}
+
+/* fan control */
+
+void fan_silent(void)
+{
+    uint8_t pol_file = -1;
+
+    if (_APOL || _ALED) {
+        pol_file = 0;
+    }
+    if (_FPOL) {
+        pol_file = 1;
+    }
+    if (_FPOL2) {
+        pol_file = 2;
+    }
+
+    write_to_policy(pol_file, __SILENT_MODE);
+}
+
+void fan_balanced(void)
+{
+    uint8_t pol_file = -1;
+
+    if (_APOL || _ALED) {
+        pol_file = 0;
+    }
+    if (_FPOL) {
+        pol_file = 1;
+    }
+    if (_FPOL2) {
+        pol_file = 2;
+    }
+
+    write_to_policy(pol_file, __BALANCED_MODE);
+}
+void fan_turbo(void)
+{
+    uint8_t pol_file = -1;
+
+    if (_APOL || _ALED) {
+        pol_file = 0;
+    }
+    if (_FPOL) {
+        pol_file = 1;
+    }
+    if (_FPOL2) {
+        pol_file = 2;
+    }
+
+    write_to_policy(pol_file, __TURBO_MODE);
 }
