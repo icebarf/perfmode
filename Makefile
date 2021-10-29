@@ -1,6 +1,6 @@
 CC = gcc
-FLAGS = -Wall -Wextra -g
-FLAGS_PKG = -Wall -Wextra -march=native
+WFLAGS = -Wall -Wextra -g -pedantic
+FLAGS_PKG = -Wall -Wextra
 
 DESTDIR= /usr/bin
 
@@ -17,3 +17,7 @@ pkg: src/perfmode.c
 
 install: perfmode
 	cp perfmode $(DESTDIR)
+
+gui: src/perfmode.c src/gui.c
+	mkdir -p bin
+	$(CC) $(WFLAGS) src/*.c -o bin/perfmode_gui `pkg-config --cflags --libs gtk4`
