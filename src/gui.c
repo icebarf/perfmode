@@ -41,24 +41,28 @@ void activate(GtkApplication* app, gpointer user_data)
     g_signal_connect(button, "clicked", G_CALLBACK(led_max), NULL);
     gtk_grid_attach(GTK_GRID(grid), button, 1, 2, 1, 1);
 
+    /* Seprator */
+    button = gtk_button_new();
+    gtk_grid_attach(GTK_GRID(grid), button, 4, 0, 1, 3);
+
     /* Heading button - does nothing */
-    button = gtk_button_new_with_label("Keyboard Backlight");
-    gtk_grid_attach(GTK_GRID(grid), button, 4, 0, 2, 1);
+    button = gtk_button_new_with_label("Fan Control");
+    gtk_grid_attach(GTK_GRID(grid), button, 5, 0, 2, 1);
 
     /* SILENT MODE */
     button = gtk_button_new_with_label("Silent");
     g_signal_connect(button, "clicked", G_CALLBACK(fan_silent), NULL);
-    gtk_grid_attach(GTK_GRID(grid), button, 4, 1, 1, 1);
+    gtk_grid_attach(GTK_GRID(grid), button, 5, 1, 1, 1);
 
     /* TURBO MODE */
     button = gtk_button_new_with_label("Balanced");
     g_signal_connect(button, "clicked", G_CALLBACK(fan_balanced), NULL);
-    gtk_grid_attach(GTK_GRID(grid), button, 5, 1, 1, 1);
+    gtk_grid_attach(GTK_GRID(grid), button, 6, 1, 1, 1);
 
     /* TURBO MODE */
     button = gtk_button_new_with_label("Turbo");
     g_signal_connect(button, "clicked", G_CALLBACK(fan_turbo), NULL);
-    gtk_grid_attach(GTK_GRID(grid), button, 4, 2, 2, 1);
+    gtk_grid_attach(GTK_GRID(grid), button, 5, 2, 2, 1);
 
     gtk_widget_show(window);
 }

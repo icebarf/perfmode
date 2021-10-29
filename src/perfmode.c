@@ -214,6 +214,7 @@ static void write_to_policy(uint8_t pol_file, uint8_t mode)
     } else {
         puts("Perfmode: Fan Mode set");
     }
+    fclose(fp);
 }
 
 static void handle_led(uint8_t pol_file, uint8_t mode)
@@ -229,6 +230,7 @@ static void handle_led(uint8_t pol_file, uint8_t mode)
     } else {
         puts("Perfmode: Keyboard Backlight level set");
     }
+    fclose(fp);
 }
 
 int main(int argc, char* argv[])
