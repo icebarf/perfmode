@@ -101,13 +101,15 @@ static void print_help()
          "Usage:\n"
 
          "\tperfmode -op|--option\n"
+         "\nor\n\tperfmode\n\n"
+         "Without arguments, A GUI is launched\n"
 
          "\nNote: Elevated permissions are required for perfmode to work i.e "
-         "sudo\n"
+         "sudo\n\n"
 
          "Options:\n"
 
-         "\nFan Control Options\n"
+         "\nFan Control:\n"
 
          "\t--turbo         Turbo Mode\n"
          "\t -t\n\n"
@@ -118,12 +120,14 @@ static void print_help()
          "\t--silent        Silent Mode\n"
          "\t -s\n\n"
 
-         "Keyboard Backlight Options\n"
+         "Keyboard Backlight:\n"
 
          "\t-l off           Turn off Backlight\n"
          "\t-l min           Minimum Backlight\n"
          "\t-l med           Medium  Backlight\n"
          "\t-l max           Maximum Backlight\n\n"
+
+         "Help:\n"
 
          "\t--help          Display this help menu\n"
          "\t -h");
