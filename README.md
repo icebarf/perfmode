@@ -33,7 +33,11 @@ $ perfmode --help
 ```
 > Keyboard backlight modes work without sudo. To do Fan Control, sudo is still required
 
-### GUI
+### GUI -- Warning! Deprecated in release 3.1.1
+
+GUI has been removed from the current release in favor of the upcoming GUI!
+
+Please use an old release i.e before `3.1.1` or an older commit and compile from source!
 
 ![gui.png](assets/gui.png)
 ```bash
@@ -48,7 +52,7 @@ The GUI is still in beta and there exists an issue. Please check the issues sect
 
 ## Installation
 
-### Arch
+### Arch Linux
 
 Arch or Arch based distributions can directly install from the AUR. You can either use an AUR Helper or 
 follow the given steps to install manually.

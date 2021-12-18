@@ -146,7 +146,8 @@ static void print_help()
          "Help:\n"
 
          "\t--help          Display this help menu\n"
-         "\t -h");
+         "\t -h\n"
+         "Visit github for more info or updates: https://github.com/icebarf/perfmode");
 }
 
 static uint8_t parse_flags(int argc, char* argv[])
