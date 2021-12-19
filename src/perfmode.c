@@ -5,12 +5,7 @@
 #include <string.h>
 #include <unistd.h>
 
-/* Local files */
-#include "gui.h"
-#include "perfmode.h"
-
 /* modes */
-
 enum modes {
     /* Fans */
     TURBO_MODE = '1',
@@ -37,19 +32,25 @@ enum file_locations {
     ALED_FILE,
     FPOL_FILE,
     FPOL2_FILE
-}
+};
 
 /* Different policy files available under different kernel modules */
-const char (file_list[4])* = {
+const char* (file_list[4]) = {
     [APOL_FILE] = "/sys/devices/platform/asus-nb-wmi/throttle_thermal_policy",
     [ALED_FILE] = "/sys/devices/platform/asus-nb-wmi/leds/asus::kbd_backlight/brightness",
     [FPOL_FILE] = "/sys/devices/platform/faustus/fan_boost_mode",
     [FPOL2_FILE] = "/sys/devices/platform/faustus/throttle_thermal_policy"
-}
+};
    
 /* Global flag like array for policy files available */
-uint8_t _APOL, _ALED, _FPOL, _FPOL2;
-uint8_t FILES[4];
+enum FILE_FL_ENUM {
+    _APOL,
+    _FPOL,
+    _FPOL2,
+    _ALED
+};
+
+uint8_t FILES_FL[4];
 
 /* Check for modules */
 static uint8_t check_module_loaded()
@@ -94,13 +95,13 @@ static void check_policies()
      * to the program */
 
     if (a_pol_exists == 0) {
-        FILES[APOL_FILE] = 1;
+        FILES_FL[_APOL] = 1;
     } else if (f_pol_exists == 0) {
-        FILES[FPOL_FILE] = 1;
+        FILES_FL[_FPOL] = 1;
     } else if (f_pol_exists_2 == 0) {
-        FILES[FPOL2_FILE] = 1;
+        FILES_FL[_FPOL2] = 1;
     } else if (a_led_exists == 0) {
-        FILES[ALED_FILE] = 1;
+        FILES_FL[_ALED] = 1;
     }
 
     /* If not files are found - print error and exit */
@@ -177,7 +178,7 @@ static uint8_t parse_flags(int argc, char* argv[])
     }
 
     /* Check for Keyboard Backlight arguments */
-    if (strncmp(argv[1], "-l", strlen(argv[1]) && (argc == 3)) == 0) {
+    if (strncmp(argv[1], "-l", strlen(argv[1])) == 0 && (argc == 3)) {
         /* backlight off */
         if (strncmp(argv[2], "off", strlen(argv[2])) == 0) {
             return LED_OFF;
@@ -235,7 +236,7 @@ static void write_to_policy(uint8_t pol_file, uint8_t mode)
         puts("Perfmode: Could not write to Policy file - insufficient permissions!");
 
         fclose(fp);
-        exit(1)
+        exit(1);
 
     } else 
     {
@@ -263,7 +264,7 @@ static void handle_led(uint8_t pol_file, uint8_t mode)
 
 int main(int argc, char* argv[])
 {
-    if(argc < 2){print_help();}
+    if(argc < 2){print_help(); return 0;}
 
     /* Check if modules are loaded */
     uint8_t retval = check_module_loaded();
@@ -276,16 +277,16 @@ Please visit https://github.com/icebarf/perfmode/#troubleshooting for more infor
     /* Check for existence of policy files and if can write to policy file */
     check_policies();
 
-    uint8_t mode = parse_flags(argv);
+    uint8_t mode = parse_flags(argc, argv);
     uint8_t pol_file = -1;
 
-    if (_APOL || _ALED) {
+    if (FILES_FL[_APOL] || FILES_FL[_ALED]) {
         pol_file = 0;
     }
-    if (_FPOL) {
+    if (FILES_FL[_FPOL]) {
         pol_file = 1;
     }
-    if (_FPOL2) {
+    if (FILES_FL[_FPOL2]) {
         pol_file = 2;
     }
 
