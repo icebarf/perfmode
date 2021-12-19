@@ -52,6 +52,40 @@ enum FILE_FL_ENUM {
 
 uint8_t FILES_FL[4];
 
+/* Error reporting */
+enum errors {
+    modules_not_loaded,
+    module_files_not_available,
+    no_permission,
+    bad_argv
+};
+
+static void
+report_err(enum errors errors)
+{
+    switch(errors)
+    {
+        case modules_not_loaded:
+            puts("Perfmode: Kernel modules are not available!\n"
+                    "Please visit https://github.com/icebarf/perfmode#troubleshooting - and match the error message there");
+            exit(1);
+
+        case module_files_not_available:
+            puts("Perfmode: Module files not available!\n"
+                    "Please visit https://github.com/icebarf/perfmode#troubleshooting - and match the error message there");
+            exit(1);
+
+        case no_permission:
+            puts("Perfmode: Insufficient permissions!\n"
+                        "Run perfmode with superuser permissions - sudo or doas");
+            exit(1);
+        case bad_argv:
+            puts("Perfmode: Invalid arguments passed\n"
+                    "Run perfmode -h for usage!");
+            exit(1);
+    }
+}
+
 /* Check for modules */
 static uint8_t check_module_loaded()
 {
@@ -107,8 +141,7 @@ static void check_policies()
     /* If not files are found - print error and exit */
     if (a_pol_exists == -1 && f_pol_exists == -1 &&
             f_pol_exists_2 == -1 && a_led_exists) {
-        puts("Perfmode: Not enugh permissions");
-        exit(1);
+        report_err(no_permission);
     }
 }
 
@@ -226,17 +259,13 @@ static void write_to_policy(uint8_t pol_file, uint8_t mode)
     }
 
     if (fp == NULL) {
-        puts("Perfmode: Could not open Policy file - insufficient permissions!");
-        exit(1);
+        report_err(no_permission);
     }
 
     int ch;
     if ((ch = fputc(mode, fp)) != mode) {
-
-        puts("Perfmode: Could not write to Policy file - insufficient permissions!");
-
         fclose(fp);
-        exit(1);
+        report_err(no_permission);
 
     } else 
     {
@@ -250,12 +279,12 @@ static void handle_led(uint8_t pol_file, uint8_t mode)
 {
     FILE* fp = fopen(file_list[ALED_FILE], "w");
     if (fp == NULL) {
-        puts("Perfmode: Could not open Policy file - insufficient permissions!");
+        report_err(no_permission);
     }
 
     int ch;
     if ((ch = fputc(mode, fp)) != mode) {
-        puts("Perfmode: Could not write to Policy file - insufficient permissions!");
+        report_err(no_permission);
     } else {
         puts("Perfmode: Keyboard Backlight level set");
     }
@@ -267,19 +296,16 @@ int main(int argc, char* argv[])
     if(argc < 2){print_help(); return 0;}
 
     /* Check if modules are loaded */
-    uint8_t retval = check_module_loaded();
-    if (retval) {
-        puts("Perfmode: Kernel modules not loaded!\n\
-Please visit https://github.com/icebarf/perfmode/#troubleshooting for more information!");
-        return 0;
+    uint8_t bad_retval = check_module_loaded();
+    if (bad_retval != 0) {
+        report_err(modules_not_loaded);
     }
 
     /* Check for existence of policy files and if can write to policy file */
     check_policies();
 
-    uint8_t mode = parse_flags(argc, argv);
+    /* Check which policy files can be used in the global FILES_FL - Files Flag array */
     uint8_t pol_file = -1;
-
     if (FILES_FL[_APOL] || FILES_FL[_ALED]) {
         pol_file = 0;
     }
@@ -290,6 +316,7 @@ Please visit https://github.com/icebarf/perfmode/#troubleshooting for more infor
         pol_file = 2;
     }
 
+    uint8_t mode = parse_flags(argc, argv);
     switch (mode) {
 
     case 0: {
@@ -326,7 +353,7 @@ Please visit https://github.com/icebarf/perfmode/#troubleshooting for more infor
     }
 
     default: {
-        puts("Perfmode: Invalid arguments passed");
+        report_err(bad_argv);
     }
     }
     return 0;
