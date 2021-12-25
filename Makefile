@@ -7,7 +7,7 @@ DESTDIR= /usr/bin
 .DEFAULT_GOAL := gui
 
 pkg: src/perfmode.c
-	$(CC) $(FLAGS_PKG) src/*.c -o perfmode
+	$(CC) $(FLAGS_PKG) src/perfmode.c -o perfmode
 	chmod +x perfmode
 
 install: perfmode
