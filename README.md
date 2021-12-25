@@ -20,15 +20,12 @@ Keyboard backlight options available:
 ### Command Line mode
 
 ```bash
-$ sudo perfmode -op | --option
+$ sudo perfmode -op option 
 ```
 
 - Viewing Help
+
 ```bash
-$ perfmode -h
-
-or
-
 $ perfmode --help
 ```
 > Keyboard backlight modes work without sudo. To do Fan Control, sudo is still required

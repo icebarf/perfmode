@@ -15,5 +15,5 @@ install: perfmode
 
 gui: src/perfmode.c
 	mkdir -p bin
-	$(CC) $(WFLAGS) src/*.c -o bin/perfmode
+	$(CC) $(WFLAGS) src/perfmode.c -o bin/perfmode
 	chmod +x bin/perfmode
