@@ -131,7 +131,7 @@ static inline void
 report_msg(const char* str)
 {
    printf("Perfmode: %s\n", str);
-   exit(1);
+   exit(0);
 }
 
 static void
@@ -358,17 +358,27 @@ identify_kfiles (const signed char* kmodule, signed char* kfile, const signed ch
                     files_av[1] = access(file_list[AFAN_FILE_2], F_OK | W_OK);
                     
                     if (files_av[0] == -1 && files_av[1] == -1)
-                     fan_files[0] = 1;
-
+                    {
+                        fan_files[0] = 1;
+                        break;
+                    }
                     if ((files_av[0] | files_av[1]) == 0)
+                    {
                         *kfile = asus_fan_both;
+                        break;
+                    }
 
                     if (files_av[0] == 0)
+                    {
                         *kfile = asus_fan_main;
+                        break;
+                    }
 
                     if (files_av[1] == 0)
+                    {
                         *kfile = asus_fan_other;
-
+                        break;
+                    }
                     break;
                 }
 
@@ -379,17 +389,26 @@ identify_kfiles (const signed char* kmodule, signed char* kfile, const signed ch
                     files_av[1] = access(file_list[FFAN_FILE_2], F_OK | W_OK);
                     
                     if (files_av[0] == -1 && files_av[1] == -1)
-                         fan_files[1] = 1;
+                    {
+                        fan_files[1] = 1; break;
+                    }
 
                     if ((files_av[0] | files_av[1]) == 0)
+                    {
                         *kfile = faustus_fan_both;
+                        break;
+                    }
 
                     if (files_av[0] == 0)
+                    {
                         *kfile = faustus_fan_main;
-
+                        break;
+                    }
                     if (files_av[1] == 0)
+                    {
                         *kfile = faustus_fan_other;
-
+                        break;
+                    }
                     break;
                 }
              default:
@@ -415,6 +434,10 @@ which_file(const signed char* kfile)
         case led_main:
             return file_list[LED_FILE];
 
+        /* default to main file if
+         * both files are present
+         * for both fasutus and asus
+         */
         case asus_fan_both:
         case asus_fan_main:
             return file_list[AFAN_FILE];
@@ -654,13 +677,6 @@ main (int argc, char* argv[])
 
     if (operation[0] == help)
         print_help(), exit(1);
-    /* Note for readers - operations is a two membered array because
-     * I need two values set when parsing argv - the operation and its type
-     * first element is the operation and the second is the type
-     * ex: perfmode -fan turbo
-     *
-     * here it would be that first element is turbo and its type is fan
-     */
 
     /* check what kernel module is available on system */
     signed char kmodule = 0;
