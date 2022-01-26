@@ -78,13 +78,10 @@ Compile using the following commands:
 
 ```bash
 $ make
+# optional - installs to /usr/local/bin
+$ sudo make install
 ```
 
-- Directly by a compiler
-
-```bash
-$ gcc -Wall -Wextra src/perfmode.c -o bin/perfmode
-```
 
 ### Troubleshooting
 
