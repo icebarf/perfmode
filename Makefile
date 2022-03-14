@@ -9,5 +9,9 @@ pkg: src/perfmode.c
 	$(CC) $(FLAGS_PKG) src/perfmode.c -o perfmode
 	chmod +x perfmode
 
+dbg: src/perfmode.c
+	$(CC) $(FLAGS_PKG) -g -Og src/perfmode.c -o perfmode
+	chmod +x perfmode
+
 install: perfmode
 	mv perfmode $(DESTDIR)
