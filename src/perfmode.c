@@ -149,16 +149,16 @@ void print_help(void)
 
          "Fan Control:\n"
 
-         "\t-fan TURBO         TURBO Mode\n"
-         "\t-fan BALANCED      BALANCED Mode\n"
-         "\t-fan SILENT        SILENT Mode\n"
+         "\t-fan turbo         Turbo Mode\n"
+         "\t-fan balanced      Balanced Mode\n"
+         "\t-fan silent        Silent Mode\n"
 
          "Keyboard Backlight:\n"
 
-         "\t-led OFF           Turn OFF Backlight\n"
-         "\t-led MIN           MINimum Backlight\n"
-         "\t-led MED           MEDium  Backlight\n"
-         "\t-led MAX           MAXimum Backlight\n"
+         "\t-led off           Turn off Backlight\n"
+         "\t-led min           Minimum Backlight\n"
+         "\t-led med           Medium  Backlight\n"
+         "\t-led max           Maximum Backlight\n"
 
          "Help:\n"
 
