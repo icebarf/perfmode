@@ -20,7 +20,7 @@ Keyboard backlight options available:
 ### Command Line mode
 
 ```bash
-$ sudo perfmode -op option 
+$ sudo perfmode -option arg
 ```
 
 - Viewing Help

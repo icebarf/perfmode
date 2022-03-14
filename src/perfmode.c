@@ -143,11 +143,9 @@ void print_help(void)
     puts("Perfmode - Manage performance mode of your asus laptop\n"
 
          "Usage:\n"
-         "\tperfmode -option\n"
+         "\tperfmode -option arg\n"
 
-         "Note: Elevated permissions are required: Run with sudo\n"
-
-         "Options:\n"
+         "\nOptions:\n"
 
          "Fan Control:\n"
 
