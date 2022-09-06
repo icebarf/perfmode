@@ -46,6 +46,12 @@ Without any aguments to perfmode, A GUI will be launched. Run with sudo for fan 
 
 The GUI is still in beta and there exists an issue. Please check the issues section for more information if you're interested.
 
+## Notice for users
+
+This tool is still maintained and will receive updates *only* when they are
+needed. As such there will not be any frequent commits or releases on this
+repository. If you have any questions regarding this, then those should only
+be asked in the [issues](https://github.com/icebarf/perfmode/issues) tab.
 
 ## Installation
 
