@@ -37,7 +37,9 @@ enum operations {
     /* Thermal policy - Silent is common to both Fan and Thermal policy */
     OVERBOOST,
     DEFAULT,
-    invalid_op
+
+    /* Reading */
+    GET,
 };
 
 enum operators {
@@ -62,6 +64,8 @@ enum operators {
 #define OVERBOOST_ss "ob"
 #define DEFAULT_s "default"
 #define DEFAULT_ss "df"
+#define GET_s "get"
+#define GET_ss "g"
 
 /* operators */
 #define LED_s "-led"
@@ -188,17 +192,22 @@ void print_help(void)
          FG_RED "\t-led med"RESET"            Medium  Backlight\n"
          FG_RED "\t-led max"RESET"            Maximum Backlight\n"
 
+         BOLD ULINE FG_RED "\nCommon option for all kinds of operations\n" RESET
+         FG_RED "\tget"RESET"                 get the current thermal, led, fan mode\n"
+         "                            eg. perfmode -fan get or perfmode -led get\n"
          BOLD ULINE FG_RED "Help\n" RESET
 
-         FG_RED"\t-help"RESET"          Display help\n"
+         FG_RED"\t-help"RESET"               Display help\n"
 
          BOLD ULINE FG_RED "\nNotes\n" RESET
          "\n1. Using either fan control or thermal policy options is fine.\n"
-         " There is no strict requirement that both should be used.\nSimply"
-         " use one of those or both, or whichever is currently supported on"
+         "   There is no strict requirement that both should be used."
+         "   Simply use one of those or both, or whichever is currently supported on"
          " your asus laptop.\n"
          "\n2. -fan, -thermal, -led and -help can be substituted with"
          " -f, -t, -l and -h respectively.\n"
+         "\n3. Along with (2), operations such as silent, balanced,\n"
+         "   turbo, overboost and get are substitutible with s, b, t, ob, df and g respectively.\n"
 
          ITALIC FG_GREEN "\nVisit github for more info or updates: "
          "https://github.com/icebarf/perfmode\n" RESET);
@@ -222,21 +231,22 @@ void handle_fan_or_led(char* argv[], enum operators* operator,
             *operation = SILENT;
             *operator= fan;
             return;
-        }
-
-        if (operation_cmp(BALANCED_s) == 0 || operation_cmp(BALANCED_ss) == 0) {
+        } else if (operation_cmp(BALANCED_s) == 0 ||
+                   operation_cmp(BALANCED_ss) == 0) {
             *operation = BALANCED;
             *operator= fan;
             return;
-        }
-
-        if (operation_cmp(TURBO_s) == 0 || operation_cmp(TURBO_ss) == 0) {
+        } else if (operation_cmp(TURBO_s) == 0 ||
+                   operation_cmp(TURBO_ss) == 0) {
             *operation = TURBO;
+            *operator= fan;
+            return;
+        } else if (operation_cmp(GET_s) == 0 || operation_cmp(GET_ss) == 0) {
+            *operation = GET;
             *operator= fan;
             return;
         }
 
-        /* If doesn't match any of the cases above throw error */
         report(FAIL, INVALID_ARGV, NULL);
     }
 
@@ -246,22 +256,22 @@ void handle_fan_or_led(char* argv[], enum operators* operator,
             *operation = SILENT;
             *operator= thermal;
             return;
-        }
-
-        if (operation_cmp(DEFAULT_s) == 0 || operation_cmp(DEFAULT_ss) == 0) {
+        } else if (operation_cmp(DEFAULT_s) == 0 ||
+                   operation_cmp(DEFAULT_ss) == 0) {
             *operation = DEFAULT;
             *operator= thermal;
             return;
-        }
-
-        if (operation_cmp(OVERBOOST_s) == 0 ||
-            operation_cmp(OVERBOOST_ss) == 0) {
+        } else if (operation_cmp(OVERBOOST_s) == 0 ||
+                   operation_cmp(OVERBOOST_ss) == 0) {
             *operation = OVERBOOST;
+            *operator= thermal;
+            return;
+        } else if (operation_cmp(GET_s) == 0 || operation_cmp(GET_ss) == 0) {
+            *operation = GET;
             *operator= thermal;
             return;
         }
 
-        /* If doesn't match any of the cases above throw error */
         report(FAIL, INVALID_ARGV, NULL);
     }
 
@@ -286,13 +296,15 @@ void handle_fan_or_led(char* argv[], enum operators* operator,
             *operation = MAX;
             *operator= led;
             return;
+        } else if (operation_cmp(GET_s) == 0 || operation_cmp(GET_ss) == 0) {
+            *operation = GET;
+            *operator= led;
+            return;
         }
 
-        /* If doesn't match any of the cases above throw error */
         report(FAIL, INVALID_ARGV, NULL);
     }
 
-    /* If doesn't match any of the cases above throw error */
     report(FAIL, INVALID_ARGV, NULL);
 }
 
@@ -319,8 +331,6 @@ void parse_argv(int argc, char* argv[], enum operators* operator,
     }
 
 fail:
-    /* If doesn't match any of the above cases throw error */
-    *operation = invalid_op;
     report(FAIL, INVALID_ARGV, NULL);
 }
 
@@ -355,27 +365,36 @@ void identify_kmodules(int8_t* kmodule)
 }
 
 static inline void check(enum file_list_enum* file,
-                         enum file_list_enum to_check)
+                         enum file_list_enum to_check,
+                         enum operations operation)
 {
-    if (access(file_list[to_check], F_OK | W_OK | R_OK) == -1)
+    if (operation == GET) {
+        if (access(file_list[to_check], F_OK | R_OK) == -1)
+            report(FAIL, NO_PERMISSION, file_list[to_check]);
+        return;
+    }
+
+    if (access(file_list[to_check], F_OK | W_OK) == -1)
         report(FAIL, NO_PERMISSION, file_list[to_check]);
+
     *file = to_check;
 }
 
-void identify_files(int8_t kmodule, enum file_list_enum* file, int8_t operator)
+void identify_files(int8_t kmodule, enum file_list_enum* file,
+                    enum operators operator, enum operations operation)
 {
     switch (operator) {
     case led:
-        check(file, LED_FILE);
+        check(file, LED_FILE, operation);
         return;
 
     case fan:
         switch (kmodule) {
         case asus_nb_wmi:
-            check(file, ASUS_FAN_POLICY);
+            check(file, ASUS_FAN_POLICY, operation);
             return;
         case faustus:
-            check(file, FSTS_FAN_POLICY);
+            check(file, FSTS_FAN_POLICY, operation);
             return;
         }
         return;
@@ -383,10 +402,10 @@ void identify_files(int8_t kmodule, enum file_list_enum* file, int8_t operator)
     case thermal:
         switch (kmodule) {
         case asus_nb_wmi:
-            check(file, ASUS_THERMAL_POLICY);
+            check(file, ASUS_THERMAL_POLICY, operation);
             return;
         case faustus:
-            check(file, FSTS_THERMAL_POLICY);
+            check(file, FSTS_THERMAL_POLICY, operation);
             return;
         }
         return;
@@ -455,6 +474,47 @@ static void write_file_log(enum operators operator, enum operations operation,
              *operation_str);
 }
 
+// clang-format off
+void read_file(const char* file, enum operators operator)
+{
+    FILE* f = fopen(file, "r");
+    int current = fgetc(f);
+    if (current == EOF)
+        report(FAIL, NO_PERMISSION, "Unable to perform a read");
+    switch (operator)
+    {
+        case led:
+            switch (current)
+            {
+                case '0': fprintf(stdout, OFF_s "\n"); break;
+                case '1': fprintf(stdout, MIN_s "\n"); break;
+                case '2': fprintf(stdout, MED_s "\n"); break;
+                case '3': fprintf(stdout, MAX_s "\n"); break;
+            }
+            break;
+        case fan:
+            switch (current)
+            {
+                case '0': fprintf(stdout, BALANCED_s "\n"); break;
+                case '1': fprintf(stdout, TURBO_s "\n"); break;
+                case '2': fprintf(stdout, SILENT_s "\n"); break;
+            }
+            break;
+        case thermal:
+            switch (current)
+            {
+                case '0': fprintf(stdout, DEFAULT_s "\n"); break;
+                case '1': fprintf(stdout, OVERBOOST_s "\n"); break;
+                case '2': fprintf(stdout, SILENT_s "\n"); break;
+            }
+            break;
+        default:
+            report(FAIL, INVALID_ARG_FUN, "invalid operator to read_file()\n");
+    }
+}
+
+// clang-format on
+
 void write_file(const char* file, int8_t ch, enum operators operator,
                 enum operations operation)
 {
@@ -498,6 +558,10 @@ void do_operation_fan(enum file_list_enum kfile, enum operators operator,
         write_file(file, '1', operator, operation);
         break;
 
+    case GET:
+        read_file(file, operator);
+        break;
+
     default:
         report(FAIL, INVALID_ARG_FUN, "do_operation_fan()");
     }
@@ -519,6 +583,10 @@ void do_operation_thermals(enum file_list_enum kfile, enum operators operator,
 
     case OVERBOOST:
         write_file(file, '1', operator, operation);
+        break;
+
+    case GET:
+        read_file(file, operator);
         break;
 
     default:
@@ -546,6 +614,10 @@ void do_operation_led(enum file_list_enum kfile, enum operators operator,
 
     case MAX:
         write_file(file, '3', operator, operation);
+        break;
+
+    case GET:
+        read_file(file, operator);
         break;
 
     default:
@@ -591,7 +663,7 @@ int main(int argc, char* argv[])
 
     /* Check which files are available */
     enum file_list_enum kfile;
-    identify_files(kmodule, &kfile, operator);
+    identify_files(kmodule, &kfile, operator, operation);
 
     /* finally perform the operation */
     do_action(kfile, operator, operation);
