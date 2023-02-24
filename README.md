@@ -1,23 +1,32 @@
 # Perfmode
 
-Perfmode is a performance control utility for ASUS TUF Gaming series of laptops. It allows both fan control and backlight control of the laptop.
+Perfmode is a performance control utility for ASUS TUF Gaming series of laptops. It allows both fan and thermal policy control along with backlight control of the laptop.
 
-Performance modes available:
+#### Fan Control Modes
 
-- Turbo
-- Balanced
-- Silent
+- `turbo` | `t`
+- `balanced` | `b`
+- `silent` | `s`
 
-Keyboard backlight options available:
+#### Thermal Policy
+- `overboost` | `ob`
+- `default` | `df`
+- `silent` | `s`
 
-- Off
-- Min
-- Med
-- Max
+Keyboard backlight :
+
+- `off`
+- `min`
+- `med`
+- `max`
+
+> You can use either of Fan or Thermal policy options and it will take desired effect. Read program help for more information.
 
 ## Usage
 
 ### Command Line mode
+
+Generic usage:
 
 ```bash
 $ sudo perfmode -option arg
@@ -28,7 +37,6 @@ $ sudo perfmode -option arg
 ```bash
 $ perfmode --help
 ```
-> Keyboard backlight modes work without sudo. To do Fan Control, sudo is still required
 
 ### GUI -- Warning! Deprecated in release 3.1.1
 
@@ -46,35 +54,36 @@ Without any aguments to perfmode, A GUI will be launched. Run with sudo for fan 
 
 The GUI is still in beta and there exists an issue. Please check the issues section for more information if you're interested.
 
-## Notice for users
+## Dependencies
 
-This tool is still maintained and will receive updates *only* when they are
-needed. As such there will not be any frequent commits or releases on this
-repository. If you have any questions regarding this, then those should only
-be asked in the [issues](https://github.com/rdseed/perfmode/issues) tab.
+- C Compiler
+- make (build system)
+- git (for cloning)
 
 ## Installation
 
-### Arch Linux
+### Regular Linux Distributions
 
-Arch or Arch based distributions can directly install from the AUR. You can either use an AUR Helper or 
-follow the given steps to install manually.
+```bash
+$ git clone https://github.com/rdseed/perfmode.git && cd perfmode
+$ make pkg
+$ sudo make install
+```
+
+Clone. Make. Install. Simple as that!
+
+### Arch (or Arch-based) Distributions
+
+Arch Linux based distributions can directly install from the AUR. You can either use an AUR Helper or follow the given steps to install manually.
 
 - Package [link](https://aur.archlinux.org/packages/perfmode)
 
 ```bash
-git clone https://aur.archlinux.org/perfmode.git
-
-cd perfmode
-
-makepkg -si
+$ git clone https://aur.archlinux.org/perfmode.git
+$ cd perfmode
+$ makepkg -si
 ```
 
-
-### Dependencies
-
-- A C Compiler
-- make
 
 ### Compiling
 
@@ -87,7 +96,6 @@ $ make
 # optional - installs to /usr/local/bin
 $ sudo make install
 ```
-
 
 ### Troubleshooting
 
@@ -117,3 +125,9 @@ This error reports that perfmode does not have enough permissions to open the po
 
 Run perfmode with `sudo` to fix this.
 
+## Notice for users
+
+This tool is still maintained and will receive updates *only* when they are
+needed. As such there will not be any frequent commits or releases on this
+repository. If you have any questions regarding this, then those should only
+be asked in the [issues](https://github.com/rdseed/perfmode/issues) tab.
