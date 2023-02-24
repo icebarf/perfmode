@@ -67,7 +67,7 @@ The GUI is still in beta and there exists an issue. Please check the issues sect
 ```bash
 $ git clone https://github.com/rdseed/perfmode.git && cd perfmode
 $ make pkg
-$ sudo make install
+$ sudo make install # optional - installs to /usr/local/bin
 ```
 
 Clone. Make. Install. Simple as that!
@@ -82,19 +82,6 @@ Arch Linux based distributions can directly install from the AUR. You can either
 $ git clone https://aur.archlinux.org/perfmode.git
 $ cd perfmode
 $ makepkg -si
-```
-
-
-### Compiling
-
-Compile using the following commands:
-
-- Using Make
-
-```bash
-$ make
-# optional - installs to /usr/local/bin
-$ sudo make install
 ```
 
 ### Troubleshooting
