@@ -216,8 +216,8 @@ void print_help(void)
 // clang-format on
 
 /* Only specific to the following two functions */
-#define operator_cmp(s2) strncmp(argv[1], s2, operator_len + 5)
-#define operation_cmp(s2) strncmp(argv[2], s2, operation_len + 5)
+#define operator_cmp(s2) strncmp(argv[1], s2, operator_len + 1)
+#define operation_cmp(s2) strncmp(argv[2], s2, operation_len + 1)
 
 void handle_fan_or_led(char* argv[], enum operators* operator,
                        enum operations * operation)
@@ -371,6 +371,7 @@ static inline void check(enum file_list_enum* file,
     if (operation == GET) {
         if (access(file_list[to_check], F_OK | R_OK) == -1)
             report(FAIL, NO_PERMISSION, file_list[to_check]);
+        *file = to_check;
         return;
     }
 
