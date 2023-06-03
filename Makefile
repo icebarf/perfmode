@@ -1,17 +1,19 @@
-CC = gcc
-FLAGS_PKG = -Wall -Wextra -pedantic -std=gnu99 -Werror
+CC ?= gcc
+CFLAGS += -Wall -Wextra -std=c2x
 
-DESTDIR:= /usr/local/bin
+BIN := perfmode
+PREFIX ?= /usr
 
-.DEFAULT_GOAL := pkg
+.DEFAULT_GOAL := perfmode
 
-pkg: src/perfmode.c
-	$(CC) $(FLAGS_PKG) src/perfmode.c -o perfmode
+$(BIN): src/perfmode.c
+	$(CC) $(CFLAGS) $< -o $@
 
-dbg: src/perfmode.c
-	$(CC) $(FLAGS_PKG) -g -Og src/perfmode.c -o perfmode
-	chmod +x perfmode
+clean:
+	rm -f $(BIN)
 
-install: perfmode
-	chmod +x perfmode
-	mv perfmode $(DESTDIR)
+install: $(BIN)
+	install -Dm755 $< "$(DESTDIR)$(PREFIX)/bin/$<"
+
+uninstall:
+	rm -f "$(DESTDIR)$(PREFIX)/bin/$(BIN)"
