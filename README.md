@@ -38,6 +38,11 @@ $ sudo perfmode -option arg
 $ perfmode --help
 ```
 
+> Please do note that this program relies on the files present in 
+ `/sys/devices/platform/` and assumes if they exist, then the kernel driver
+ is also loaded. Earlier the program relied on lsmod output but that was not
+ feasible where the module(s) were built into the kernel.
+
 ### GUI -- Warning! Deprecated in release 3.1.1
 
 GUI has been removed from the current release in favor of the upcoming GUI!
@@ -58,7 +63,7 @@ The GUI is still in beta and there exists an issue. Please check the issues sect
 
 - C Compiler
 - make (build system)
-- git (for cloning)
+- git (for cloning, optional)
 
 ## Installation
 

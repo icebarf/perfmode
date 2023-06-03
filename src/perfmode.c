@@ -1,4 +1,5 @@
 #include <assert.h>
+#include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -98,39 +99,36 @@ enum codes {
     UNWN
 };
 
-void report_err(enum codes error, const char* str)
+[[noreturn]] void report_err(enum codes error, const char* str)
 {
     switch (error) {
     case INVALID_ARGV:
         puts("Perfmode: Invalid arguments\n"
              "View help with: perfmode -help");
-        exit(1);
+        break;
 
     case BAD_FP:
         printf("Perfmode: Bad file pointer %s\n", str);
-        exit(1);
+        break;
 
     case NO_MODULE_FOUND:
         puts("Perfmode: Kernel modules are not available!\n"
              "Visit https://github.com/icebarf/perfmode#troubleshooting");
-        exit(1);
+        break;
 
     case NO_PERMISSION:
-        printf("Perfmode: No permission for %s. Does it Exist?\n", str);
-        exit(1);
+        printf("Perfmode: No permission for %s.\n", str);
+        break;
 
     case INVALID_ARG_FUN:
         printf("Perfmode: Invalid Argument to function %s\n", str);
-        exit(1);
+        break;
 
     case UNWN:
-        printf("Perfmode: UNWN error - %s\n", str);
-        exit(1);
-
     default:
         puts("Perfmode: Invalid Error Reported!");
-        exit(1);
     }
+    exit(1);
 }
 
 static inline void report_msg(const char* str)
@@ -143,7 +141,6 @@ void report(enum codes codes, enum codes err, const char* str)
     switch (codes) {
     case FAIL:
         report_err(err, str);
-        exit(1);
 
     case SUCCESS:
         report_msg(str);
@@ -151,7 +148,6 @@ void report(enum codes codes, enum codes err, const char* str)
 
     default:
         report_err(INVALID_ARG_FUN, "report()");
-        exit(1);
     }
 }
 
@@ -334,90 +330,64 @@ fail:
     report(FAIL, INVALID_ARGV, NULL);
 }
 
-void identify_kmodules(int8_t* kmodule)
+static inline bool file_exists(enum file_list_enum to_check,
+                               enum operations operation)
 {
-    /* Check for asus_nb_wmi */
-    FILE* asus_fp = popen("lsmod | grep ^asus_nb_wmi", "r");
+    uint8_t perms = F_OK | W_OK;
 
-    if (asus_fp == NULL)
-        report(FAIL, BAD_FP, NULL);
+    if (operation == GET)
+        perms = F_OK | W_OK;
 
-    char outbuf[25];
-    if (fread(outbuf, 1, sizeof(outbuf), asus_fp) > 0) {
-        *kmodule = asus_nb_wmi;
-        return;
-    }
+    if (access(file_list[to_check], perms) == -1)
+        return false;
 
-    /* Check for faustus */
-    FILE* faustus_fp = popen("lsmod | grep ^faustus", "r");
-
-    if (faustus_fp == NULL)
-        report(FAIL, BAD_FP, NULL);
-
-    char f_outbuf[25];
-    if (fread(f_outbuf, 1, sizeof(outbuf), faustus_fp) > 0) {
-        *kmodule = faustus;
-        return;
-    }
-
-    /* If none of the above modules exist */
-    report(FAIL, NO_MODULE_FOUND, NULL);
+    return true;
 }
 
-static inline void check(enum file_list_enum* file,
-                         enum file_list_enum to_check,
-                         enum operations operation)
-{
-    if (operation == GET) {
-        if (access(file_list[to_check], F_OK | R_OK) == -1)
-            report(FAIL, NO_PERMISSION, file_list[to_check]);
-        *file = to_check;
-        return;
-    }
-
-    if (access(file_list[to_check], F_OK | W_OK) == -1)
-        report(FAIL, NO_PERMISSION, file_list[to_check]);
-
-    *file = to_check;
-}
-
-void identify_files(int8_t kmodule, enum file_list_enum* file,
-                    enum operators operator, enum operations operation)
+/* We can assume that either asus_nb_wmi or faustus modules will be loaded
+ * but not both. From this assumption we can always assume that in the
+ * `fan` and `thermal` cases, either a single file will be selected or none.
+ * see: https://github.com/hackbnw/faustus#disable-original-modules
+ */
+void identify_files(enum file_list_enum* file, enum operators operator,
+                          enum operations operation)
 {
     switch (operator) {
     case led:
-        check(file, LED_FILE, operation);
+        if (file_exists(LED_FILE, operation))
+            *file = LED_FILE;
+        else 
+            report(FAIL, NO_PERMISSION, file_list[LED_FILE]);
+	
         return;
 
     case fan:
-        switch (kmodule) {
-        case asus_nb_wmi:
-            check(file, ASUS_FAN_POLICY, operation);
-            return;
-        case faustus:
-            check(file, FSTS_FAN_POLICY, operation);
-            return;
-        }
+        if (file_exists(ASUS_FAN_POLICY, operation))
+            *file = ASUS_FAN_POLICY;
+        else if (file_exists(FSTS_FAN_POLICY, operation))
+            *file = FSTS_FAN_POLICY;
+        else 
+            report(FAIL, NO_PERMISSION, "module files. "
+                   "Make sure either you're running as root or "
+                   "have the requried kernel modules");
+        
         return;
 
     case thermal:
-        switch (kmodule) {
-        case asus_nb_wmi:
-            check(file, ASUS_THERMAL_POLICY, operation);
-            return;
-        case faustus:
-            check(file, FSTS_THERMAL_POLICY, operation);
-            return;
-        }
+        if (file_exists(ASUS_THERMAL_POLICY, operation))
+            *file = ASUS_THERMAL_POLICY;
+        else if (file_exists(FSTS_THERMAL_POLICY, operation))
+            *file = FSTS_THERMAL_POLICY;
+        else 
+            report(FAIL, NO_PERMISSION, "module files. "
+                   "Make sure either you're running as root or "
+                   "have the requried kernel modules");
+        
         return;
 
     default:
         report(FAIL, INVALID_ARG_FUN, "identify_kfiles()");
-        break;
     }
-
-    report(FAIL, NO_PERMISSION,
-           "unable to identify file, invalid arguments in identify_kfiles()");
 }
 
 static void write_file_log(enum operators operator, enum operations operation,
@@ -482,7 +452,8 @@ void read_file(const char* file, enum operators operator)
     int current = fgetc(f);
     if (current == EOF)
         report(FAIL, NO_PERMISSION, "Unable to perform a read");
-    switch (operator)
+ 
+   switch (operator)
     {
         case led:
             switch (current)
@@ -520,10 +491,8 @@ void write_file(const char* file, int8_t ch, enum operators operator,
                 enum operations operation)
 {
     FILE* fp = fopen(file, "w");
-    if (fp == NULL) {
+    if (fp == NULL) 
         report(FAIL, BAD_FP, "at write_file()");
-        report(FAIL, NO_PERMISSION, file);
-    }
 
     /* Logging stuff */
     char *operator_str, *operation_str;
@@ -534,10 +503,11 @@ void write_file(const char* file, int8_t ch, enum operators operator,
     if (fputc(ch, fp) == ch) {
         report(SUCCESS, NO_ARG, msg);
         fclose(fp);
-        return;
+	
     } else {
         fclose(fp);
         report(FAIL, UNWN, errmsg);
+	exit(1);
     }
 }
 
@@ -658,13 +628,9 @@ int main(int argc, char* argv[])
     if (operator== help)
         print_help(), exit(1);
 
-    /* check what kernel module is available on system */
-    int8_t kmodule;
-    identify_kmodules(&kmodule);
-
     /* Check which files are available */
     enum file_list_enum kfile;
-    identify_files(kmodule, &kfile, operator, operation);
+    identify_files(&kfile, operator, operation);
 
     /* finally perform the operation */
     do_action(kfile, operator, operation);

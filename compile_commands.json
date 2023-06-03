@@ -1,0 +1,6 @@
+[
+	{
+	"directory": "/home/ice/Projects/c/perfmode",
+	"command": "/usr/bin/gcc -Wall -Wextra -std=c2x src/perfmode.c",
+	"file": "src/perfmode.c"},
+]
