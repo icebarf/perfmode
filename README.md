@@ -47,7 +47,7 @@ $ perfmode --help
 
 ## Dependencies
 
-- cc (should support C23's `[[noreturn]]`, use anything released in late-2022, or 2023)
+- cc
 - make
 - git (optional)
 
