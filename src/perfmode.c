@@ -99,7 +99,7 @@ enum codes {
     UNWN
 };
 
-[[noreturn]] void report_err(enum codes error, const char* str)
+__attribute__((noreturn)) void report_err(enum codes error, const char* str)
 {
     switch (error) {
     case INVALID_ARGV:

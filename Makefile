@@ -1,5 +1,5 @@
 CC ?= gcc
-CFLAGS += -Wall -Wextra -std=c2x
+CFLAGS += -Wall -Wextra -std=c11
 
 BIN := perfmode
 PREFIX ?= /usr
