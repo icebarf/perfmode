@@ -13,7 +13,7 @@ If a single is present, either asus, faustus or acpi files, it will only write t
 If neither thermal throttle, fan boost, or faustus mode files are present, it will default to acpi
 platform files. If none are found, it will error out.
 
-**No matter what your system is using, simply doing `perfmode -fan or -thermal <operation>` will work regardless.**
+**No matter what your system is using, simply doing `perfmode --fan or --thermal <operation>` will work regardless.**
 **If you're not sure what works, always do both, `--fan` and `--thermal`.**
 
 **`--platform` should be the safest option on newer kernels and laptops (6.18+) from testing**
