@@ -83,15 +83,15 @@ enum operators {
 #define GET_ss "g"
 
 /* operators */
-#define LED_s "-led"
+#define LED_s "--led"
 #define LED_ss "-l"
-#define FAN_s "-fan"
+#define FAN_s "--fan"
 #define FAN_ss "-f"
-#define THERMAL_s "-thermal"
+#define THERMAL_s "--thermal"
 #define THERMAL_ss "-t"
-#define PLATFORM_s "-platform"
+#define PLATFORM_s "--platform"
 #define PLATFORM_ss "-p"
-#define HELP_s "-help"
+#define HELP_s "--help"
 #define HELP_ss "-h"
 
 enum kmodules { asus_nb_wmi, faustus, nomodule };
@@ -181,41 +181,42 @@ void print_help(void)
     puts(FG_GREEN
          "Perfmode - Manage performance mode of your asus laptop\n" RESET
 
-         BOLD ULINE FG_RED "Usage\n" RESET "\tperfmode -option arg\n"
+         BOLD ULINE FG_RED "Usage\n" RESET "\tperfmode --option arg\n"
+         BOLD ULINE FG_RED "                \tperfmode -o a\n"
 
          BOLD ULINE FG_RED "\nOptions\n" RESET
 
          BOLD ULINE FG_RED "\nPlatform Control\n" RESET
 
-         FG_RED "\t-platform performance"RESET"    Performance Mode\n"
-         FG_RED "\t-platform balanced"RESET"       Balanced Mode\n"
-         FG_RED "\t-platform quiet"RESET"          Silent Mode\n"
+         FG_RED "\t--platform performance"RESET"    Performance Mode\n"
+         FG_RED "\t--platform balanced"RESET"       Balanced Mode\n"
+         FG_RED "\t--platform quiet"RESET"          Silent Mode\n"
 
          BOLD ULINE FG_RED "\nFan Control\n" RESET
 
-         FG_RED "\t-fan turbo"RESET"          Turbo Mode\n"
-         FG_RED "\t-fan balanced"RESET"       Balanced Mode\n"
-         FG_RED "\t-fan silent"RESET"         Silent Mode\n"
+         FG_RED "\t--fan turbo"RESET"          Turbo Mode\n"
+         FG_RED "\t--fan balanced"RESET"       Balanced Mode\n"
+         FG_RED "\t--fan silent"RESET"         Silent Mode\n"
 
          BOLD ULINE FG_RED "\nThermal Policy\n" RESET
 
-         FG_RED"\t-thermal overboost"RESET"  Overboost Mode\n"
-         FG_RED"\t-thermal default"RESET"    Default Mode\n"
-         FG_RED"\t-thermal silent"RESET"     Silent Mode\n"
+         FG_RED"\t--thermal overboost"RESET"  Overboost Mode\n"
+         FG_RED"\t--thermal default"RESET"    Default Mode\n"
+         FG_RED"\t--thermal silent"RESET"     Silent Mode\n"
 
          BOLD ULINE FG_RED "\nKeyboard Backlight\n" RESET
 
-         FG_RED "\t-led off"RESET"            Turn off Backlight\n"
-         FG_RED "\t-led min"RESET"            Minimum Backlight\n"
-         FG_RED "\t-led med"RESET"            Medium  Backlight\n"
-         FG_RED "\t-led max"RESET"            Maximum Backlight\n"
+         FG_RED "\t--led off"RESET"            Turn off Backlight\n"
+         FG_RED "\t--led min"RESET"            Minimum Backlight\n"
+         FG_RED "\t--led med"RESET"            Medium  Backlight\n"
+         FG_RED "\t--led max"RESET"            Maximum Backlight\n"
 
          BOLD ULINE FG_RED "\nCommon option for all kinds of operations\n" RESET
          FG_RED "\tget"RESET"                 get the current thermal, led, fan mode\n"
          "                            eg. perfmode -fan get or perfmode -led get\n"
          BOLD ULINE FG_RED "Help\n" RESET
 
-         FG_RED"\t-help"RESET"               Display help\n"
+         FG_RED"\t--help"RESET"               Display help\n"
 
          BOLD ULINE FG_RED "\nNotes\n" RESET
          "\n1. Using either fan control or thermal policy options is fine.\n"
@@ -224,8 +225,8 @@ void print_help(void)
          " your asus laptop.\n"
          "\n2. -platform, -fan, -thermal, -led and -help can be substituted with"
          " -p, -f, -t, -l and -h respectively.\n"
-         "\n3. Along with (2), operations such as silent, balanced,\n"
-         "   turbo, overboost and get are substitutible with s, b, t, o, d and g respectively.\n"
+         "\n3. Along with (2), operations aside from led options,\n"
+         "   are substitutable with the first letter of the option, i.e turbo -> t, balanced -> b etc...\n"
 
          ITALIC FG_GREEN "\nVisit github for more info or updates: "
          "https://github.com/icebarf/perfmode\n" RESET);
@@ -462,16 +463,16 @@ static void write_file_log(enum operators operator, enum operations operation,
 {
     switch (operator) {
     case led:
-        *operator_str = LED_s + 1; /* skip the `-` */
+        *operator_str = LED_s + 2; /* skip the `-` */
         break;
     case fan:
-        *operator_str = FAN_s + 1;
+        *operator_str = FAN_s + 2;
         break;
     case thermal:
-        *operator_str = THERMAL_s + 1;
+        *operator_str = THERMAL_s + 2;
         break;
     case platform:
-        *operator_str = PLATFORM_s + 1;
+        *operator_str = PLATFORM_s + 2;
         break;
     default:
         report(FAIL, INVALID_ARG_FUN, __FUNCTION__);

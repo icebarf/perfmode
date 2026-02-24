@@ -52,7 +52,13 @@ Read program help for more information.
 Generic usage:
 
 ```bash
-$ sudo perfmode -option arg
+$ sudo perfmode --option arg
+```
+
+or the shorthand
+
+```bash
+$ sudo perfmode -o a
 ```
 
 - Viewing Help
