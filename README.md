@@ -14,9 +14,9 @@ If neither thermal throttle, fan boost, or faustus mode files are present, it wi
 platform files. If none are found, it will error out.
 
 **No matter what your system is using, simply doing `perfmode -fan or -thermal <operation>` will work regardless.**
-**If you're not sure what works, always do both, `-fan` and `-thermal`.**
+**If you're not sure what works, always do both, `--fan` and `--thermal`.**
 
-**`-platform` should be the safest option on newer kernels and laptops (6.18+) from testing**
+**`--platform` should be the safest option on newer kernels and laptops (6.18+) from testing**
 
 #### Platform Profiles
 
