@@ -11,7 +11,10 @@ enum file_list_enum {
     ASUS_THERMAL_POLICY,
     ASUS_FAN_POLICY,
     FSTS_THERMAL_POLICY,
-    FSTS_FAN_POLICY
+    FSTS_FAN_POLICY,
+    PLATFORM_PROFILE,
+    PLATFORM_PROFILE_CHOICES,
+    BAD_FILE
 };
 
 static const char* file_list[] = {
@@ -21,7 +24,9 @@ static const char* file_list[] = {
     [ASUS_FAN_POLICY] = "/sys/devices/platform/asus-nb-wmi/fan_boost_mode",
     [FSTS_THERMAL_POLICY] =
         "/sys/devices/platform/faustus/throttle_thermal_policy",
-    [FSTS_FAN_POLICY] = "/sys/devices/platform/faustus/fan_boost_mode"};
+    [FSTS_FAN_POLICY] = "/sys/devices/platform/faustus/fan_boost_mode",
+    [PLATFORM_PROFILE] = "/sys/firmware/acpi/platform_profile",
+    [PLATFORM_PROFILE_CHOICES] = "/sys/firmware/acpi/platform_profile_choices"};
 
 enum operations {
     /* LED */
@@ -39,6 +44,10 @@ enum operations {
     OVERBOOST,
     DEFAULT,
 
+    /* Platform Modes  - Balanced is common to fan control and platform mode */
+    QUIET,
+    PERFORMANCE,
+
     /* Reading */
     GET,
 };
@@ -47,6 +56,7 @@ enum operators {
     led,
     fan,
     thermal,
+    platform,
     help,
 };
 
@@ -57,14 +67,18 @@ enum operators {
 #define MAX_s "max"
 #define SILENT_s "silent"
 #define SILENT_ss "s" /* the ss stands for short-string*/
+#define QUIET_s "quiet"
+#define QUIET_ss "q"
 #define BALANCED_s "balanced"
 #define BALANCED_ss "b"
 #define TURBO_s "turbo"
 #define TURBO_ss "t"
+#define PERFORMANCE_s "performance"
+#define PERFORMANCE_ss "p"
 #define OVERBOOST_s "overboost"
-#define OVERBOOST_ss "ob"
+#define OVERBOOST_ss "o"
 #define DEFAULT_s "default"
-#define DEFAULT_ss "df"
+#define DEFAULT_ss "d"
 #define GET_s "get"
 #define GET_ss "g"
 
@@ -75,6 +89,8 @@ enum operators {
 #define FAN_ss "-f"
 #define THERMAL_s "-thermal"
 #define THERMAL_ss "-t"
+#define PLATFORM_s "-platform"
+#define PLATFORM_ss "-p"
 #define HELP_s "-help"
 #define HELP_ss "-h"
 
@@ -169,6 +185,12 @@ void print_help(void)
 
          BOLD ULINE FG_RED "\nOptions\n" RESET
 
+         BOLD ULINE FG_RED "\nPlatform Control\n" RESET
+
+         FG_RED "\t-platform performance"RESET"    Performance Mode\n"
+         FG_RED "\t-platform balanced"RESET"       Balanced Mode\n"
+         FG_RED "\t-platform quiet"RESET"          Silent Mode\n"
+
          BOLD ULINE FG_RED "\nFan Control\n" RESET
 
          FG_RED "\t-fan turbo"RESET"          Turbo Mode\n"
@@ -200,10 +222,10 @@ void print_help(void)
          "   There is no strict requirement that both should be used."
          "   Simply use one of those or both, or whichever is currently supported on"
          " your asus laptop.\n"
-         "\n2. -fan, -thermal, -led and -help can be substituted with"
-         " -f, -t, -l and -h respectively.\n"
+         "\n2. -platform, -fan, -thermal, -led and -help can be substituted with"
+         " -p, -f, -t, -l and -h respectively.\n"
          "\n3. Along with (2), operations such as silent, balanced,\n"
-         "   turbo, overboost and get are substitutible with s, b, t, ob, df and g respectively.\n"
+         "   turbo, overboost and get are substitutible with s, b, t, o, d and g respectively.\n"
 
          ITALIC FG_GREEN "\nVisit github for more info or updates: "
          "https://github.com/icebarf/perfmode\n" RESET);
@@ -215,31 +237,56 @@ void print_help(void)
 #define operator_cmp(s2) strncmp(argv[1], s2, operator_len + 1)
 #define operation_cmp(s2) strncmp(argv[2], s2, operation_len + 1)
 
-void handle_fan_or_led(char* argv[], enum operators* operator,
-                       enum operations * operation)
+void handle_rest(char* argv[], enum operators* operator,
+                 enum operations* operation)
 {
     size_t operator_len = strlen(argv[1]);
     size_t operation_len = strlen(argv[2]);
+
+    if (operator_cmp(PLATFORM_s) == 0 || operator_cmp(PLATFORM_ss) == 0) {
+
+        if (operation_cmp(QUIET_s) == 0 || operation_cmp(QUIET_ss) == 0) {
+            *operation = QUIET;
+            *operator = platform;
+            return;
+        } else if (operation_cmp(BALANCED_s) == 0 ||
+                   operation_cmp(BALANCED_ss) == 0) {
+            *operation = BALANCED;
+            *operator = platform;
+            return;
+        } else if (operation_cmp(PERFORMANCE_s) == 0 ||
+                   operation_cmp(PERFORMANCE_ss) == 0) {
+            *operation = PERFORMANCE;
+            *operator = platform;
+            return;
+        } else if (operation_cmp(GET_s) == 0 || operation_cmp(GET_ss) == 0) {
+            *operation = GET;
+            *operator = platform;
+            return;
+        }
+
+        report(FAIL, INVALID_ARGV, NULL);
+    }
 
     if (operator_cmp(FAN_s) == 0 || operator_cmp(FAN_ss) == 0) {
 
         if (operation_cmp(SILENT_s) == 0 || operation_cmp(SILENT_ss) == 0) {
             *operation = SILENT;
-            *operator= fan;
+            *operator = fan;
             return;
         } else if (operation_cmp(BALANCED_s) == 0 ||
                    operation_cmp(BALANCED_ss) == 0) {
             *operation = BALANCED;
-            *operator= fan;
+            *operator = fan;
             return;
         } else if (operation_cmp(TURBO_s) == 0 ||
                    operation_cmp(TURBO_ss) == 0) {
             *operation = TURBO;
-            *operator= fan;
+            *operator = fan;
             return;
         } else if (operation_cmp(GET_s) == 0 || operation_cmp(GET_ss) == 0) {
             *operation = GET;
-            *operator= fan;
+            *operator = fan;
             return;
         }
 
@@ -250,21 +297,21 @@ void handle_fan_or_led(char* argv[], enum operators* operator,
 
         if (operation_cmp(SILENT_s) == 0 || operation_cmp(SILENT_ss) == 0) {
             *operation = SILENT;
-            *operator= thermal;
+            *operator = thermal;
             return;
         } else if (operation_cmp(DEFAULT_s) == 0 ||
                    operation_cmp(DEFAULT_ss) == 0) {
             *operation = DEFAULT;
-            *operator= thermal;
+            *operator = thermal;
             return;
         } else if (operation_cmp(OVERBOOST_s) == 0 ||
                    operation_cmp(OVERBOOST_ss) == 0) {
             *operation = OVERBOOST;
-            *operator= thermal;
+            *operator = thermal;
             return;
         } else if (operation_cmp(GET_s) == 0 || operation_cmp(GET_ss) == 0) {
             *operation = GET;
-            *operator= thermal;
+            *operator = thermal;
             return;
         }
 
@@ -275,26 +322,26 @@ void handle_fan_or_led(char* argv[], enum operators* operator,
 
         if (operation_cmp(OFF_s) == 0) {
             *operation = OFF;
-            *operator= led;
+            *operator = led;
             return;
 
         } else if (operation_cmp(MIN_s) == 0) {
             *operation = MIN;
-            *operator= led;
+            *operator = led;
             return;
 
         } else if (operation_cmp(MED_s) == 0) {
             *operation = MED;
-            *operator= led;
+            *operator = led;
             return;
 
         } else if (operation_cmp(MAX_s) == 0) {
             *operation = MAX;
-            *operator= led;
+            *operator = led;
             return;
         } else if (operation_cmp(GET_s) == 0 || operation_cmp(GET_ss) == 0) {
             *operation = GET;
-            *operator= led;
+            *operator = led;
             return;
         }
 
@@ -305,10 +352,10 @@ void handle_fan_or_led(char* argv[], enum operators* operator,
 }
 
 void parse_argv(int argc, char* argv[], enum operators* operator,
-                enum operations * operation)
+                enum operations* operation)
 {
     if (argc < 2) {
-        *operator= help;
+        *operator = help;
         return;
     }
     size_t operator_len = strlen(argv[1]);
@@ -316,12 +363,12 @@ void parse_argv(int argc, char* argv[], enum operators* operator,
     assert(argv[1] != NULL);
     if (argc >= 2 && argc < 4) {
         if (operator_cmp(HELP_s) == 0 || operator_cmp(HELP_ss) == 0) {
-            *operator= help;
+            *operator = help;
             return;
         } else {
             if (argc != 3)
                 goto fail;
-            handle_fan_or_led(argv, operator, operation);
+            handle_rest(argv, operator, operation);
             return;
         }
     }
@@ -336,10 +383,11 @@ static inline bool file_exists(enum file_list_enum to_check,
     uint8_t perms = F_OK | W_OK;
 
     if (operation == GET)
-        perms = F_OK | W_OK;
+        perms = F_OK | R_OK;
 
-    if (access(file_list[to_check], perms) == -1)
+    if (access(file_list[to_check], perms) == -1) {
         return false;
+    }
 
     return true;
 }
@@ -349,44 +397,62 @@ static inline bool file_exists(enum file_list_enum to_check,
  * `fan` and `thermal` cases, either a single file will be selected or none.
  * see: https://github.com/hackbnw/faustus#disable-original-modules
  */
-void identify_files(enum file_list_enum* file, enum operators operator,
-                          enum operations operation)
+void identify_files(enum file_list_enum (*file)[2], enum operators operator,
+                    enum operations operation)
 {
     switch (operator) {
     case led:
         if (file_exists(LED_FILE, operation))
-            *file = LED_FILE;
-        else 
+            (*file)[0] = LED_FILE;
+        else
             report(FAIL, NO_PERMISSION, file_list[LED_FILE]);
-	
+
+        return;
+
+    case platform:
+        if (file_exists(PLATFORM_PROFILE, operation) &&
+            file_exists(PLATFORM_PROFILE_CHOICES, GET))
+            (*file)[0] = PLATFORM_PROFILE;
+        else
+            report(FAIL, NO_PERMISSION,
+                   "module files. "
+                   "Make sure either you're running as root or "
+                   "have the requried kernel modules");
         return;
 
     case fan:
         if (file_exists(ASUS_FAN_POLICY, operation))
-            *file = ASUS_FAN_POLICY;
+            (*file)[0] = ASUS_FAN_POLICY;
         else if (file_exists(FSTS_FAN_POLICY, operation))
-            *file = FSTS_FAN_POLICY;
-        else 
-            report(FAIL, NO_PERMISSION, "module files. "
+            (*file)[0] = FSTS_FAN_POLICY;
+        else if (file_exists(PLATFORM_PROFILE, operation) &&
+                 file_exists(PLATFORM_PROFILE_CHOICES, GET))
+            (*file)[1] = PLATFORM_PROFILE;
+        else
+            report(FAIL, NO_PERMISSION,
+                   "module files. "
                    "Make sure either you're running as root or "
                    "have the requried kernel modules");
-        
         return;
 
     case thermal:
         if (file_exists(ASUS_THERMAL_POLICY, operation))
-            *file = ASUS_THERMAL_POLICY;
+            (*file)[0] = ASUS_THERMAL_POLICY;
         else if (file_exists(FSTS_THERMAL_POLICY, operation))
-            *file = FSTS_THERMAL_POLICY;
-        else 
-            report(FAIL, NO_PERMISSION, "module files. "
+            (*file)[0] = FSTS_THERMAL_POLICY;
+        else if (file_exists(PLATFORM_PROFILE, operation) &&
+                 file_exists(PLATFORM_PROFILE_CHOICES, GET))
+            (*file)[1] = PLATFORM_PROFILE;
+        else {
+            report(FAIL, NO_PERMISSION,
+                   "module files. "
                    "Make sure either you're running as root or "
                    "have the requried kernel modules");
-        
+        }
         return;
 
     default:
-        report(FAIL, INVALID_ARG_FUN, "identify_kfiles()");
+        report(FAIL, INVALID_ARG_FUN, __FUNCTION__);
     }
 }
 
@@ -404,8 +470,11 @@ static void write_file_log(enum operators operator, enum operations operation,
     case thermal:
         *operator_str = THERMAL_s + 1;
         break;
+    case platform:
+        *operator_str = PLATFORM_s + 1;
+        break;
     default:
-        report(FAIL, INVALID_ARG_FUN, "write_file_log()");
+        report(FAIL, INVALID_ARG_FUN, __FUNCTION__);
     }
 
     switch (operation) {
@@ -424,8 +493,14 @@ static void write_file_log(enum operators operator, enum operations operation,
     case SILENT:
         *operation_str = SILENT_s;
         break;
+    case QUIET:
+        *operation_str = QUIET_s;
+        break;
     case BALANCED:
         *operation_str = BALANCED_s;
+        break;
+    case PERFORMANCE:
+        *operation_str = PERFORMANCE_s;
         break;
     case TURBO:
         *operation_str = TURBO_s;
@@ -437,12 +512,42 @@ static void write_file_log(enum operators operator, enum operations operation,
         *operation_str = DEFAULT_s;
         break;
     default:
-        report(FAIL, INVALID_ARG_FUN, "write_file_log()");
+        report(FAIL, INVALID_ARG_FUN, __FUNCTION__);
     }
 
     snprintf(*msg, 100, "Set %s policy to %s", *operator_str, *operation_str);
     snprintf(*errmsg, 100, "Couldn't set %s policy to %s", *operator_str,
              *operation_str);
+}
+
+void read_platform_file(const char* file)
+{
+    FILE* platform_file = fopen(file, "r");
+    if (platform_file == NULL) {
+        perror("Platform File opening error:");
+        report(FAIL, BAD_FP, file);
+        return;
+    }
+
+    char buf[50];
+    memset(buf, 0, sizeof(buf));
+    if (fgets(buf, sizeof(buf), platform_file) == NULL) {
+        report(FAIL, UNWN, "Read failure for platform file");
+        return;
+    }
+    fprintf(stdout, "%s", buf);
+}
+
+void write_platform_file(const char* file, const char* mode)
+{
+    FILE* platform_file = fopen(file, "w");
+    if (platform_file == NULL) {
+        perror("Platform File opening error:");
+        report(FAIL, BAD_FP, file);
+        return;
+    }
+
+    fwrite(mode, sizeof(char), strlen(mode), platform_file);
 }
 
 // clang-format off
@@ -481,18 +586,42 @@ void read_file(const char* file, enum operators operator)
             }
             break;
         default:
-            report(FAIL, INVALID_ARG_FUN, "invalid operator to read_file()\n");
+            report(FAIL, INVALID_ARG_FUN, "invalid operator to read_file\n");
     }
 }
-
 // clang-format on
+
+void write_file_str(const char* file, const char* str, enum operators operator,
+                    enum operations operation)
+{
+    FILE* fp = fopen(file, "w");
+    if (fp == NULL)
+        report(FAIL, BAD_FP, __FUNCTION__);
+
+    /* Logging stuff */
+    char *operator_str, *operation_str;
+    char msg[100], errmsg[100];
+    write_file_log(operator, operation, &operator_str, &operation_str, &msg,
+                   &errmsg);
+
+    if (fputs(str, fp) > 0) {
+        report(SUCCESS, NO_ARG, msg);
+        fclose(fp);
+
+    } else {
+        fclose(fp);
+        perror("Failure due to");
+        report(FAIL, UNWN, errmsg);
+        exit(1);
+    }
+}
 
 void write_file(const char* file, int8_t ch, enum operators operator,
                 enum operations operation)
 {
     FILE* fp = fopen(file, "w");
-    if (fp == NULL) 
-        report(FAIL, BAD_FP, "at write_file()");
+    if (fp == NULL)
+        report(FAIL, BAD_FP, __FUNCTION__);
 
     /* Logging stuff */
     char *operator_str, *operation_str;
@@ -503,65 +632,103 @@ void write_file(const char* file, int8_t ch, enum operators operator,
     if (fputc(ch, fp) == ch) {
         report(SUCCESS, NO_ARG, msg);
         fclose(fp);
-	
+
     } else {
         fclose(fp);
+        perror("Failure due to");
         report(FAIL, UNWN, errmsg);
-	exit(1);
+        exit(1);
     }
 }
 
-void do_operation_fan(enum file_list_enum kfile, enum operators operator,
-                      enum operations operation)
+void do_operation_kmod(const char* kmod_file, enum operators operator,
+                       enum operations operation)
 {
-    const char* file = file_list[kfile];
-
     switch (operation) {
     case SILENT:
-        write_file(file, '2', operator, operation);
+        write_file(kmod_file, '2', operator, operation);
         break;
 
     case BALANCED:
-        write_file(file, '0', operator, operation);
+    case DEFAULT:
+        write_file(kmod_file, '0', operator, operation);
         break;
 
     case TURBO:
-        write_file(file, '1', operator, operation);
+    case OVERBOOST:
+        write_file(kmod_file, '1', operator, operation);
         break;
 
     case GET:
-        read_file(file, operator);
+        read_file(kmod_file, operator);
         break;
 
     default:
-        report(FAIL, INVALID_ARG_FUN, "do_operation_fan()");
+        report(FAIL, INVALID_ARG_FUN, __FUNCTION__);
     }
 }
 
-void do_operation_thermals(enum file_list_enum kfile, enum operators operator,
-                           enum operations operation)
+void do_operation_platform(enum operators operator, enum operations operation)
 {
-    const char* file = file_list[kfile];
-
     switch (operation) {
-    case SILENT:
-        write_file(file, '2', operator, operation);
-        break;
-
-    case DEFAULT:
-        write_file(file, '0', operator, operation);
-        break;
-
-    case OVERBOOST:
-        write_file(file, '1', operator, operation);
-        break;
-
     case GET:
-        read_file(file, operator);
+        read_platform_file(file_list[PLATFORM_PROFILE]);
+        break;
+    case SILENT:
+    case QUIET:
+        write_platform_file(file_list[PLATFORM_PROFILE], "quiet\n");
+        break;
+    case BALANCED:
+    case DEFAULT:
+        write_platform_file(file_list[PLATFORM_PROFILE], "balanced\n");
+        break;
+    case TURBO:
+    case OVERBOOST:
+    case PERFORMANCE:
+        write_platform_file(file_list[PLATFORM_PROFILE], "performance\n");
         break;
 
     default:
-        report(FAIL, INVALID_ARG_FUN, "do_operation_fan()");
+        report(FAIL, INVALID_ARG_FUN, __FUNCTION__);
+    }
+
+    if (operation != GET) {
+        char *operator_str, *operation_str;
+        char msg[100], errmsg[100];
+        write_file_log(operator, operation, &operator_str, &operation_str, &msg,
+                       &errmsg);
+        report(SUCCESS, NO_ARG, msg);
+        return;
+    }
+}
+
+void do_operation_performance(enum file_list_enum (*kfile)[2],
+                              enum operators operator,
+                              enum operations operation)
+{
+    const char* kmod_file = NULL;
+    const char* platform_file = NULL;
+    if ((*kfile)[0] != BAD_FILE) {
+        kmod_file = file_list[(*kfile)[0]];
+    }
+    if ((*kfile)[1] != BAD_FILE) {
+        platform_file = file_list[(*kfile)[1]];
+    }
+
+    bool write_both = false;
+    if (kmod_file != NULL && platform_file != NULL)
+        write_both = true;
+
+    if (write_both) {
+        do_operation_kmod(kmod_file, operator, operation);
+        do_operation_platform(operator, operation);
+        return;
+    } else if (kmod_file != NULL) {
+        do_operation_kmod(kmod_file, operator, operation);
+        return;
+    } else if (platform_file != NULL) {
+        do_operation_platform(operator, operation);
+        return;
     }
 }
 
@@ -592,29 +759,29 @@ void do_operation_led(enum file_list_enum kfile, enum operators operator,
         break;
 
     default:
-        report(FAIL, INVALID_ARG_FUN, "do_operation_fan()");
+        report(FAIL, INVALID_ARG_FUN, __FUNCTION__);
     }
 }
 
-void do_action(enum file_list_enum kfile, enum operators operator,
+void do_action(enum file_list_enum (*kfile)[2], enum operators operator,
                enum operations operation)
 
 {
     switch (operator) {
-    case fan:
-        do_operation_fan(kfile, operator, operation);
+    case platform:
+        do_operation_platform(operator, operation);
         break;
-
+    case fan:
     case thermal:
-        do_operation_thermals(kfile, operator, operation);
+        do_operation_performance(kfile, operator, operation);
         break;
 
     case led:
-        do_operation_led(kfile, operator, operation);
+        do_operation_led((*kfile)[0], operator, operation);
         break;
 
     default:
-        report(FAIL, INVALID_ARG_FUN, "do_action()");
+        report(FAIL, INVALID_ARG_FUN, __FUNCTION__);
     }
 }
 
@@ -623,17 +790,17 @@ int main(int argc, char* argv[])
     /* check what operation to do */
     enum operators operator;
     enum operations operation;
-    parse_argv(argc, argv, &operator, & operation);
+    parse_argv(argc, argv, &operator, &operation);
 
-    if (operator== help)
+    if (operator == help)
         print_help(), exit(1);
 
     /* Check which files are available */
-    enum file_list_enum kfile;
+    enum file_list_enum kfile[2] = {BAD_FILE, BAD_FILE};
     identify_files(&kfile, operator, operation);
 
     /* finally perform the operation */
-    do_action(kfile, operator, operation);
+    do_action(&kfile, operator, operation);
 
     return 0;
 }

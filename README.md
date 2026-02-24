@@ -3,16 +3,37 @@
 Perfmode is a performance control utility for ASUS TUF Gaming series of laptops.
 It allows both fan and thermal policy control along with backlight control of the laptop.
 
+### 24 Feb 2026
+
+As of above date, perfmode also supports the generic acpi exposed firmware files for controlling
+performance modes on asus laptops. If it detects both the generic ACPI files and kernel module
+files are present, it will write to both.
+If a single is present, either asus, faustus or acpi files, it will only write to that.
+
+If neither thermal throttle, fan boost, or faustus mode files are present, it will default to acpi
+platform files. If none are found, it will error out.
+
+**No matter what your system is using, simply doing `perfmode -fan or -thermal <operation>` will work regardless.**
+**If you're not sure what works, always do both, `-fan` and `-thermal`.**
+
+**`-platform` should be the safest option on newer kernels and laptops (6.18+) from testing**
+
+#### Platform Profiles
+
+- `performance` | `p`
+- `balanced`    | `b`
+- `quiet`       | `s`
+
 #### Fan Control Modes
 
-- `turbo` | `t`
+- `turbo`    | `t`
 - `balanced` | `b`
-- `silent` | `s`
+- `silent`   | `s`
 
 #### Thermal Policy
-- `overboost` | `ob`
-- `default` | `df`
-- `silent` | `s`
+- `overboost` | `o`
+- `default`   | `d`
+- `silent`    | `s`
 
 Keyboard backlight :
 
@@ -41,9 +62,7 @@ $ perfmode --help
 ```
 
 > Please do note that this program relies on the files present in 
- `/sys/devices/platform/` and assumes if they exist, then the kernel driver
- is also loaded. Earlier the program relied on lsmod output but that was not
- feasible where the module(s) were built into the kernel.
+ `/sys/devices/platform/asus-nb-wmi` and `/sys/firmware/acpi/` for operation.
 
 ## Dependencies
 
@@ -81,4 +100,4 @@ $ makepkg -si
 This tool is still maintained and will receive updates *only* when they are
 needed. As such there will not be any frequent commits or releases on this
 repository. If you have any questions regarding this, then those should only
-be asked in the [issues](https://github.com/rdseed/perfmode/issues) tab.
+be asked in the [issues](https://github.com/icebarf/perfmode/issues) tab.
