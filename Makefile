@@ -1,5 +1,5 @@
 CC ?= gcc
-CFLAGS += -Wall -Wextra -std=c11 -Wno-implicit-fallthrough -g -Og
+CFLAGS += -Wall -Wextra -std=c11 -Wno-implicit-fallthrough -O3
 
 BIN := perfmode
 PREFIX ?= /usr
