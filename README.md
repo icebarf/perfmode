@@ -5,9 +5,9 @@ It allows both fan and thermal policy control along with backlight control of th
 
 ### 24 Feb 2026
 
-As of above date, perfmode also supports the generic acpi exposed firmware files for controlling
+As of date, perfmode also supports the generic acpi exposed firmware files for controlling
 performance modes on asus laptops. If it detects both the generic ACPI files and kernel module
-files are present, it will write to both.
+files, it will write to both.
 If a single is present, either asus, faustus or acpi files, it will only write to that.
 
 If neither thermal throttle, fan boost, or faustus mode files are present, it will default to acpi
@@ -90,10 +90,22 @@ Clone. Make. Install. Simple as that!
 
 ### Arch Linux or based distributions
 
-Arch Linux based distributions can directly install from the AUR.
+Arch Linux based distributions can directly install from the [AUR perfmode package](https://aur.archlinux.org/packages/perfmode).
 You can either use an AUR Helper or follow the given steps to install manually.
 
-- Package [link](https://aur.archlinux.org/packages/perfmode)
+- Yay
+
+```bash
+$ yay -S perfmode
+```
+
+- Paru
+
+```bash
+$ paru -S perfmode
+```
+
+- Manual Package Build
 
 ```bash
 $ git clone https://aur.archlinux.org/perfmode.git

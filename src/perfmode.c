@@ -174,59 +174,64 @@ void report(enum codes codes, enum codes err, const char* str)
 
 #define FG_RED "\033[31m"
 #define FG_GREEN "\033[32m"
+#define FG_GRAY "\033[37m"
 
 // clang-format off
 void print_help(void)
 {
-    puts(FG_GREEN
-         "Perfmode - Manage performance mode of your asus laptop\n" RESET
+    puts(BOLD
+         "Perfmode" RESET " - Manage fan/thermal profiles on your asus laptop\n"
 
          BOLD ULINE FG_RED "Usage\n" RESET "\tperfmode --option arg\n"
-         BOLD ULINE FG_RED "                \tperfmode -o a\n"
+         "\tperfmode -o a\n"
 
          BOLD ULINE FG_RED "\nOptions\n" RESET
 
          BOLD ULINE FG_RED "\nPlatform Control\n" RESET
 
-         FG_RED "\t--platform performance"RESET"    Performance Mode\n"
-         FG_RED "\t--platform balanced"RESET"       Balanced Mode\n"
-         FG_RED "\t--platform quiet"RESET"          Silent Mode\n"
+         "\t--platform performance"RESET"    Performance Mode\n"
+         "\t--platform balanced"RESET"       Balanced Mode\n"
+         "\t--platform quiet"RESET"          Silent Mode\n"
 
          BOLD ULINE FG_RED "\nFan Control\n" RESET
 
-         FG_RED "\t--fan turbo"RESET"          Turbo Mode\n"
-         FG_RED "\t--fan balanced"RESET"       Balanced Mode\n"
-         FG_RED "\t--fan silent"RESET"         Silent Mode\n"
+         "\t--fan turbo"RESET"          Turbo Mode\n"
+         "\t--fan balanced"RESET"       Balanced Mode\n"
+         "\t--fan silent"RESET"         Silent Mode\n"
 
          BOLD ULINE FG_RED "\nThermal Policy\n" RESET
 
-         FG_RED"\t--thermal overboost"RESET"  Overboost Mode\n"
-         FG_RED"\t--thermal default"RESET"    Default Mode\n"
-         FG_RED"\t--thermal silent"RESET"     Silent Mode\n"
+         "\t--thermal overboost"RESET"  Overboost Mode\n"
+         "\t--thermal default"RESET"    Default Mode\n"
+         "\t--thermal silent"RESET"     Silent Mode\n"
 
          BOLD ULINE FG_RED "\nKeyboard Backlight\n" RESET
 
-         FG_RED "\t--led off"RESET"            Turn off Backlight\n"
-         FG_RED "\t--led min"RESET"            Minimum Backlight\n"
-         FG_RED "\t--led med"RESET"            Medium  Backlight\n"
-         FG_RED "\t--led max"RESET"            Maximum Backlight\n"
+         "\t--led off"RESET"            Turn off Backlight\n"
+         "\t--led min"RESET"            Minimum Backlight\n"
+         "\t--led med"RESET"            Medium  Backlight\n"
+         "\t--led max"RESET"            Maximum Backlight\n"
 
          BOLD ULINE FG_RED "\nCommon option for all kinds of operations\n" RESET
-         FG_RED "\tget"RESET"                 get the current thermal, led, fan mode\n"
+         "\tget"RESET"                 get the current thermal, led, fan mode\n"
          "                            eg. perfmode -fan get or perfmode -led get\n"
          BOLD ULINE FG_RED "Help\n" RESET
 
-         FG_RED"\t--help"RESET"               Display help\n"
+         "\t--help"RESET"               Display help\n"
 
          BOLD ULINE FG_RED "\nNotes\n" RESET
-         "\n1. Using either fan control or thermal policy options is fine.\n"
-         "   There is no strict requirement that both should be used."
-         "   Simply use one of those or both, or whichever is currently supported on"
-         " your asus laptop.\n"
-         "\n2. -platform, -fan, -thermal, -led and -help can be substituted with"
-         " -p, -f, -t, -l and -h respectively.\n"
-         "\n3. Along with (2), operations aside from led options,\n"
-         "   are substitutable with the first letter of the option, i.e turbo -> t, balanced -> b etc...\n"
+         "\n1. Using either --fan or --thermal options is fine.\n"
+         "   The --platform option was added to support the new generic acpi api on newer kernels.\n"
+         "   Simply use one of the available options , or whichever is currently supported on"
+         " your asus laptop (by experimenting).\n"
+         BOLD "2. --platform, --fan, --thermal, --led and --help can be substituted with"
+         " -p, -f, -t, -l and -h respectively.\n" RESET
+         "3. Along with (2), aside from led args, the rest of the args are substitutable\n"
+         "   with the first letter of the option, i.e turbo -> t, balanced -> b etc...\n"
+         "   ex:\n"
+         "     sudo perfmode -f t   " FG_GRAY "# set fan profile to turbo mode\n" RESET
+         "     sudo perfmode -t d   " FG_GRAY "# set thermal profile to default\n" RESET
+         "     sudo perfmode -p p   " FG_GRAY "# set platform profile to performance\n" RESET
 
          ITALIC FG_GREEN "\nVisit github for more info or updates: "
          "https://github.com/icebarf/perfmode\n" RESET);
